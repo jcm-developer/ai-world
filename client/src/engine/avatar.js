@@ -9,6 +9,18 @@ import * as THREE from 'three';
 
 const HIP_HEIGHT = 0.95;
 
+// Posturas: ángulos objetivo de cada articulación (radianes; hacia delante = negativo en X).
+// El avatar pasa de una a otra suavemente; caminar se superpone a la postura de pie.
+const POSES = {
+  stand: { hipY: HIP_HEIGHT, thigh: 0, knee: 0, shL: 0, shR: 0, elL: -0.18, elR: -0.18, head: 0, torso: 0 },
+  stand_hold: { hipY: HIP_HEIGHT, thigh: 0, knee: 0, shL: 0, shR: -0.45, elL: -0.18, elR: -1.35, head: 0, torso: 0 },
+  drink: { hipY: HIP_HEIGHT, thigh: 0, knee: 0, shL: 0, shR: -0.45, elL: -0.18, elR: -1.35, head: 0, torso: 0 },
+  sit: { hipY: 0.47, thigh: -1.5, knee: 1.5, shL: -0.35, shR: -0.35, elL: -0.8, elR: -0.8, head: 0.05, torso: -0.05 },
+  type: { hipY: 0.47, thigh: -1.5, knee: 1.5, shL: -0.85, shR: -0.85, elL: -0.75, elR: -0.75, head: 0.3, torso: 0.12 },
+  type_nervous: { hipY: 0.47, thigh: -1.5, knee: 1.5, shL: -0.85, shR: -0.85, elL: -0.75, elR: -0.75, head: 0.25, torso: 0.14 },
+  read: { hipY: 0.47, thigh: -1.5, knee: 1.5, shL: -0.7, shR: -0.7, elL: -1.35, elR: -1.35, head: 0.4, torso: 0.05 },
+};
+
 const vertexShader = /* glsl */ `
   varying vec3 vNormalW;
   varying vec3 vPosW;
@@ -166,11 +178,15 @@ export function createAvatar(scene, { color = '#8cb8ff' } = {}) {
   let activity = 0;
   let lookTarget = null; // punto hacia el que gira la cabeza (p. ej. el visitante)
   let headYaw = 0;
+  let pose = 'stand';
+  const P = { ...POSES.stand }; // postura actual (interpolada)
   let initialized = false;
 
   return {
     root,
     thoughtAnchor,
+    /** Manos (para colgarles objetos: una taza, un papel…). Origen en el codo; la mano está en y≈-0.3. */
+    hands: { L: limbs.L.elbow, R: limbs.R.elbow },
 
     /** Elimina el avatar de la escena. */
     dispose() {
@@ -183,6 +199,7 @@ export function createAvatar(scene, { color = '#8cb8ff' } = {}) {
       target.set(state.x, 0, state.z);
       targetHeading = state.heading;
       walking = state.walking;
+      if (state.pose && POSES[state.pose]) pose = state.pose;
       if (snap || !initialized) {
         root.position.copy(target);
         root.rotation.y = targetHeading;
@@ -225,25 +242,47 @@ export function createAvatar(scene, { color = '#8cb8ff' } = {}) {
       const s = Math.sin(phase);
       const wb = walkBlend;
 
-      // Piernas (hacia delante = rotación negativa en X) y rodillas
-      limbs.L.hip.rotation.x = -s * 0.42 * wb;
-      limbs.R.hip.rotation.x = s * 0.42 * wb;
-      limbs.L.knee.rotation.x = Math.max(0, Math.sin(phase + 1.1)) * 0.65 * wb;
-      limbs.R.knee.rotation.x = Math.max(0, Math.sin(phase + 1.1 + Math.PI)) * 0.65 * wb;
+      // Postura objetivo (al caminar, siempre de pie) e interpolación suave hacia ella
+      const goal = POSES[walking ? 'stand' : pose];
+      const kp = 1 - Math.exp(-dt * 4);
+      for (const key in goal) P[key] += (goal[key] - P[key]) * kp;
 
-      // Brazos en contrafase, ligeramente separados y con los codos algo flexionados
-      limbs.L.shoulder.rotation.set(s * 0.32 * wb, 0, 0.07);
-      limbs.R.shoulder.rotation.set(-s * 0.32 * wb, 0, -0.07);
-      limbs.L.elbow.rotation.x = -0.18 - Math.max(0, -s) * 0.25 * wb;
-      limbs.R.elbow.rotation.x = -0.18 - Math.max(0, s) * 0.25 * wb;
+      // Animaciones propias de cada actividad
+      let typeL = 0;
+      let typeR = 0;
+      let sip = 0;
+      let glance = 0;
+      if (!walking && (pose === 'type' || pose === 'type_nervous')) {
+        const speed = pose === 'type_nervous' ? 22 : 15;
+        typeL = Math.sin(t * speed) * 0.06;
+        typeR = Math.sin(t * speed + Math.PI) * 0.06;
+        if (pose === 'type_nervous') glance = Math.max(0, Math.sin(t * 0.7) - 0.85) * 4; // mira alrededor de vez en cuando
+      }
+      if (!walking && pose === 'drink') {
+        const cycle = t % 7;
+        sip = cycle < 1.6 ? Math.sin((cycle / 1.6) * Math.PI) : 0; // un sorbo cada 7 s
+      }
 
-      // Balanceo de cadera, respiración en reposo y leve movimiento de cabeza
-      hips.position.y = HIP_HEIGHT + Math.abs(Math.cos(phase)) * 0.03 * wb - 0.015 * wb + Math.sin(t * 1.5) * 0.004;
+      // Piernas (postura + paso) y rodillas
+      limbs.L.hip.rotation.x = P.thigh - s * 0.42 * wb;
+      limbs.R.hip.rotation.x = P.thigh + s * 0.42 * wb;
+      limbs.L.knee.rotation.x = P.knee + Math.max(0, Math.sin(phase + 1.1)) * 0.65 * wb;
+      limbs.R.knee.rotation.x = P.knee + Math.max(0, Math.sin(phase + 1.1 + Math.PI)) * 0.65 * wb;
+
+      // Brazos: postura + balanceo al caminar + tecleo o sorbo
+      limbs.L.shoulder.rotation.set(P.shL + s * 0.32 * wb, 0, 0.07);
+      limbs.R.shoulder.rotation.set(P.shR - s * 0.32 * wb - sip * 0.8, 0, -0.07);
+      limbs.L.elbow.rotation.x = P.elL - Math.max(0, -s) * 0.25 * wb + typeL;
+      limbs.R.elbow.rotation.x = P.elR - Math.max(0, s) * 0.25 * wb + typeR - sip * 0.6;
+
+      // Cadera, respiración, inclinación del torso
+      hips.position.y = P.hipY + Math.abs(Math.cos(phase)) * 0.03 * wb - 0.015 * wb + Math.sin(t * 1.5) * 0.004;
       hips.rotation.y = s * 0.07 * wb;
       torso.rotation.y = -s * 0.05 * wb;
-      torso.rotation.x = 0.04 * wb;
+      torso.rotation.x = P.torso + 0.04 * wb;
+      thoughtAnchor.position.y = 2.1 + (P.hipY - HIP_HEIGHT);
       // Cabeza: mira al visitante si está cerca y no camina; si no, un leve vaivén
-      let goalYaw = Math.sin(t * 0.35) * 0.18 * (1 - wb);
+      let goalYaw = Math.sin(t * 0.35) * 0.18 * (1 - wb) + glance * Math.sin(t * 3);
       if (lookTarget && wb < 0.3) {
         const dx = lookTarget.x - root.position.x;
         const dz = lookTarget.z - root.position.z;
@@ -253,7 +292,7 @@ export function createAvatar(scene, { color = '#8cb8ff' } = {}) {
       }
       headYaw += (goalYaw - headYaw) * (1 - Math.exp(-dt * 3));
       head.rotation.y = headYaw;
-      head.rotation.x = Math.sin(t * 0.5) * 0.04;
+      head.rotation.x = P.head - sip * 0.25 + Math.sin(t * 0.5) * 0.04;
 
       uniforms.uTime.value = t;
       uniforms.uActivity.value = activity;
