@@ -144,6 +144,7 @@ Con GPU NVIDIA, descomenta el bloque `deploy` del servicio `ollama` en `docker-c
 | W A S D / flechas | Caminar |
 | Shift | Correr |
 | F | Girarte hacia la IA |
+| T (mantener) | Hablarle a la IA: suéltala para enviar |
 | V | Cambiar a la vista general (y volver) |
 | Esc | Soltar el ratón (para usar el panel) |
 
@@ -152,6 +153,8 @@ Con GPU NVIDIA, descomenta el bloque `deploy` del servicio `ollama` en `docker-c
 Con la **voz** activada, el texto flotante espera a que empiece el audio y se escribe al mismo ritmo que la voz.
 
 **La IA te percibe.** Cuando estás en primera persona, tu posición y hacia dónde miras entran en su percepción como un visitante («a 2 m, a tu izquierda; te está mirando»). Te saluda al entrar, de vez en cuando te cuenta en voz alta lo que descubre (con un bocadillo ámbar entre comillas, distinto de sus pensamientos, y con su voz si está activada) y gira la cabeza hacia ti cuando estás cerca. Para no distraerse, habla como mucho una vez cada 30 segundos y nunca en lugar de su acción del turno. En la vista general no estás «dentro» de la sala y deja de percibirte.
+
+**Háblale.** En primera persona, mantén pulsada la **T**, habla y suéltala: lo que dices aparece transcrito en directo y, al soltar, se envía. La IA solo te oye si estás cerca (a menos de 6 m; junto a la mira verás «T hablar» o «Acércate a la IA para hablarle»). Te contesta en uno o dos segundos con su voz y su bocadillo, aunque esté caminando, y en su siguiente turno decide ella si te hace caso: sabe que eres un espectador y que puedes equivocarte. Si empiezas a hablar mientras ella habla, se calla. La transcripción usa el reconocimiento de voz del navegador (en Chrome el audio se procesa en los servidores de Google); si tu navegador no lo tiene (Firefox) o no das permiso al micrófono, la T abre un campo para escribir. El micrófono solo funciona en `localhost` o con HTTPS. En los escenarios con final, si alguien le habla la partida queda marcada **«con ayuda humana»** en el hub y en el resultado.
 
 ---
 

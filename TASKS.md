@@ -11,6 +11,7 @@ Hoja de ruta del hub. Cada escenario nuevo se añade como módulo enchufable (ve
 - [x] Voz de los agentes (OpenAI TTS con respaldo en la voz del navegador) y sonido ambiente, con el texto sincronizado con la voz
 - [x] Cámara en primera persona (WASD + ratón) con colisiones
 - [x] La IA percibe al visitante en primera persona, le saluda y le habla (herramienta say)
+- [x] El visitante puede hablarle a la IA (pulsar T para hablar, con texto como respaldo); las partidas con final quedan marcadas «con ayuda humana»
 - [x] Landing de producto para GitHub Pages (`docs/`)
 
 ## Escenarios pendientes
@@ -66,5 +67,6 @@ Una capa sobre los demás escenarios: el mismo reto con varios modelos a la vez.
 - [ ] Hub: comprobar el diseño en un móvil real.
 - [ ] Visión real: enviar al modelo una imagen desde los ojos del avatar en lugar de (o junto a) la descripción en texto.
 - [ ] Búsqueda de caminos para los avatares (que rodeen los muebles en lugar de atravesarlos).
-- [ ] Que el visitante pueda hablarle a la IA (texto o micrófono).
+- [ ] Hablar con quien miras: dirigirte a un personaje concreto (p. ej. interrogar tú a los sospechosos del Detective).
+- [ ] Transcripción de voz en el servidor (`STT_PROVIDER=openai`) para navegadores sin reconocimiento de voz y mejor calidad.
 - [ ] Landing: añadir un vídeo o GIF corto de una partida real.

@@ -52,7 +52,8 @@ const SCHEMA = `
     outcome     TEXT,
     summary     TEXT,
     ticks       INTEGER,
-    models      TEXT    NOT NULL DEFAULT ''
+    models      TEXT    NOT NULL DEFAULT '',
+    helped      INTEGER NOT NULL DEFAULT 0
   );
 `;
 
@@ -63,6 +64,9 @@ export class MemoryStore {
     fs.mkdirSync(path.dirname(dbPath), { recursive: true });
     this.db = new DatabaseSync(dbPath);
     this.db.exec(SCHEMA);
+    // Bases de datos anteriores: la columna «helped» (partida con ayuda humana) se añade si falta
+    const runColumns = this.db.prepare('PRAGMA table_info(runs)').all();
+    if (!runColumns.some((c) => c.name === 'helped')) this.db.exec('ALTER TABLE runs ADD COLUMN helped INTEGER NOT NULL DEFAULT 0');
 
     const q = (sql) => this.db.prepare(sql);
     this.sql = {
@@ -80,7 +84,8 @@ export class MemoryStore {
 
       startRun: q('INSERT INTO runs (scenario, started_at, models) VALUES (?, ?, ?)'),
       endRun: q('UPDATE runs SET ended_at = ?, outcome = ?, summary = ?, ticks = ? WHERE id = ?'),
-      recentRuns: q('SELECT id, scenario, started_at, ended_at, outcome, summary, ticks, models FROM runs WHERE scenario = ? ORDER BY id DESC LIMIT ?'),
+      markHelped: q('UPDATE runs SET helped = 1 WHERE id = ?'),
+      recentRuns: q('SELECT id, scenario, started_at, ended_at, outcome, summary, ticks, models, helped FROM runs WHERE scenario = ? ORDER BY id DESC LIMIT ?'),
     };
 
     this.#migrateV1();
@@ -108,8 +113,13 @@ export class MemoryStore {
     this.sql.endRun.run(now(), outcome, summary, ticks, id);
   }
 
+  /** Marca una partida como «con ayuda humana» (un visitante habló con la IA). */
+  markHelped(id) {
+    this.sql.markHelped.run(id);
+  }
+
   recentRuns(scenario, limit = 10) {
-    return this.sql.recentRuns.all(scenario, limit).map((r) => ({ ...r }));
+    return this.sql.recentRuns.all(scenario, limit).map((r) => ({ ...r, helped: Boolean(r.helped) }));
   }
 
   close() {

@@ -729,6 +729,150 @@ kbd {
   color: rgba(240, 198, 116, 0.8);
 }
 
+/* --- Hablar con la IA --- */
+.talk-hint {
+  position: fixed;
+  left: 50%;
+  top: calc(50% + 18px);
+  z-index: 5;
+  transform: translateX(-50%);
+  font-size: 11.5px;
+  color: rgba(230, 236, 245, 0.55);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.talk-hint[data-state='far'] {
+  color: rgba(230, 236, 245, 0.32);
+}
+
+.talk-hint[hidden] {
+  display: none;
+}
+
+.talk-busy .fps-hint {
+  display: none;
+}
+
+.talk,
+.caption {
+  position: fixed;
+  left: 50%;
+  bottom: 32px;
+  z-index: 12;
+  width: min(560px, calc(100vw - 32px));
+  transform: translateX(-50%);
+  padding: 12px 18px 14px;
+  border: 1px solid var(--line);
+  border-left: 2px solid var(--accent);
+  border-radius: 12px;
+  background: var(--panel);
+  backdrop-filter: blur(14px);
+  animation: fade-in 0.25s ease;
+}
+
+.talk[hidden],
+.caption[hidden] {
+  display: none;
+}
+
+.talk-state {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11.5px;
+  color: var(--muted);
+}
+
+.talk-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.talk[data-state='listening'] .talk-dot {
+  background: var(--err);
+  box-shadow: 0 0 0 0 rgba(240, 138, 138, 0.6);
+  animation: talk-pulse 1.4s ease-out infinite;
+}
+
+@keyframes talk-pulse {
+  to {
+    box-shadow: 0 0 0 9px rgba(240, 138, 138, 0);
+  }
+}
+
+.talk-live {
+  min-height: 1.4em;
+  margin: 6px 0 0;
+  font-size: 15px;
+  color: var(--text);
+}
+
+.talk-live:empty {
+  display: none;
+}
+
+.talk-form input {
+  width: 100%;
+  margin-top: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(5, 7, 11, 0.6);
+  color: var(--text);
+  font: inherit;
+  font-size: 15px;
+  outline: none;
+}
+
+.talk-form input:focus {
+  border-color: rgba(140, 184, 255, 0.5);
+}
+
+.caption {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.caption-who {
+  flex: none;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.caption-who:empty {
+  display: none;
+}
+
+.caption-text {
+  font-size: 15px;
+  color: var(--text);
+}
+
+.caption[data-variant='other'] {
+  border-left-color: var(--muted);
+}
+
+.caption[data-variant='other'] .caption-who {
+  color: var(--muted);
+}
+
+.caption[data-variant='notice'] {
+  border-left-color: var(--warn);
+}
+
+.caption[data-variant='notice'] .caption-text {
+  font-size: 13.5px;
+  color: var(--muted);
+}
+
 /* --- Nombre y cargo sobre los personajes (Detective) --- */
 .npc-label {
   display: flex;

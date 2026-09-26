@@ -255,6 +255,7 @@ export function createPanel({ onControl }) {
     showFinished(result) {
       finishedEl.hidden = !result;
       if (!result) return;
+      finishedEl.querySelector('.finished-label').textContent = result.helped ? 'Partida terminada · con ayuda humana' : 'Partida terminada';
       finishedEl.querySelector('.finished-outcome').textContent = result.outcome;
       finishedEl.querySelector('.finished-summary').textContent = result.summary ?? '';
     },

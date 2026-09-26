@@ -99,6 +99,7 @@ wss.on('connection', (ws, req) => {
     if (msg?.type === 'control' && ['pause', 'resume', 'reset'].includes(msg.action)) session.control(msg.action);
     else if (msg?.type === 'voice') session.setVoice(ws, Boolean(msg.enabled));
     else if (msg?.type === 'visitor') session.setVisitor(ws, msg);
+    else if (msg?.type === 'visitor_say') session.hear(ws, msg);
   });
 
   ws.on('close', () => {

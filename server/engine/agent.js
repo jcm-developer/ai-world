@@ -7,18 +7,21 @@
 // - No consulta al modelo mientras su avatar camina, si nadie está mirando o si la partida terminó.
 // - Ante un 429 espera con backoff exponencial; no reintenta en bucle.
 // - Una herramienta inválida se registra y el agente sigue en el siguiente tick.
+// - Si un visitante le habla, su siguiente petición es una respuesta (solo "say"), aunque esté
+//   caminando: se adelanta en la cola, pero sigue sin haber dos peticiones a la vez.
 
 import { EventEmitter } from 'node:events';
 import { log } from '../logger.js';
 import { visitorsSection } from '../scenarios/common/perception.js';
-import { VISITOR_RULES } from '../scenarios/common/prompt.js';
+import { REPLY_INSTRUCTION, VISITOR_RULES } from '../scenarios/common/prompt.js';
 import { sayTool } from '../scenarios/common/tools.js';
 
 const MAX_CALLS_PER_TICK = 3; // think + remember + una acción física (say también es gratis)
 const BACKOFF_BASE_MS = 5000;
 const BACKOFF_MAX_MS = 120000;
 const POLL_MS = 200;
-const SAY_COOLDOWN_MS = 30000; // pausa mínima entre dos intervenciones en voz alta
+const SAY_COOLDOWN_MS = 30000; // pausa mínima entre dos intervenciones en voz alta (no se aplica al contestar)
+const HEARD_TTL_MS = 20000; // si no ha podido contestar en este tiempo, deja de hacerlo
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -52,6 +55,8 @@ export class Agent extends EventEmitter {
     this.lastSaidAt = 0; // cuándo habló por última vez a un visitante
     this.lastSaid = '';
     this.queued = null; // acción pedida junto a un move_to: se ejecuta al llegar
+    this.heard = null; // { text, at } lo que le ha dicho un visitante y aún no ha contestado
+    this.wake = null; // interrumpe la espera entre turnos
   }
 
   get world() {
@@ -87,11 +92,24 @@ export class Agent extends EventEmitter {
   /** Olvida su estado transitorio (tras reiniciar la partida). */
   resetState() {
     this.queued = null;
+    this.heard = null;
     this.lastThought = null;
     this.lastError = null;
     this.rateLimitStreak = 0;
     this.failureStreak = 0;
     this.backoffUntil = 0;
+  }
+
+  /** Un visitante cercano le habla: contestará en cuanto pueda (ver #reply). */
+  hear(text) {
+    // Si vuelve a hablar antes de que conteste, se juntan las dos frases
+    this.heard = { text: this.heard ? `${this.heard.text} ${text}` : text, at: Date.now() };
+    this.#record(this.memory.tick, 'escucha', { texto: text }, {
+      ok: true,
+      summary: `El visitante te dice: «${text}»`,
+      memoryChanged: false,
+    });
+    this.wake?.();
   }
 
   status() {
@@ -128,9 +146,26 @@ export class Agent extends EventEmitter {
       await this.#waitUntilReady();
       if (!this.running) break;
       const started = Date.now();
-      await this.#tick();
-      await sleep(Math.max(0, this.config.tickMs - (Date.now() - started)));
+      if (this.heard) await this.#reply();
+      else await this.#tick();
+      await this.#rest(Math.max(0, this.config.tickMs - (Date.now() - started)));
     }
+  }
+
+  /** Espera entre dos turnos; se corta en cuanto un visitante le habla. */
+  #rest(ms) {
+    if (this.heard || ms <= 0) return Promise.resolve();
+    return new Promise((resolve) => {
+      const timer = setTimeout(() => {
+        this.wake = null;
+        resolve();
+      }, ms);
+      this.wake = () => {
+        clearTimeout(timer);
+        this.wake = null;
+        resolve();
+      };
+    });
   }
 
   #canAct() {
@@ -144,9 +179,22 @@ export class Agent extends EventEmitter {
     );
   }
 
+  /** Para contestar a un visitante no hace falta estar quieto (puede hablar mientras camina). */
+  #canReply() {
+    if (this.heard && Date.now() - this.heard.at > HEARD_TTL_MS) this.heard = null;
+    return (
+      Boolean(this.heard) &&
+      !this.paused &&
+      !this.halted &&
+      !this.session.finished &&
+      this.session.hasViewers() &&
+      Date.now() >= this.backoffUntil
+    );
+  }
+
   async #waitUntilReady() {
     let waitedBackoff = false;
-    while (this.running && !this.#canAct()) {
+    while (this.running && !this.#canAct() && !this.#canReply()) {
       if (this.backoffUntil) waitedBackoff = true;
       await sleep(POLL_MS);
     }
@@ -186,7 +234,12 @@ export class Agent extends EventEmitter {
         // Cada escenario puede pedir más memoria (p. ej. el escape room, donde las pistas son cruciales)
         config: { ...this.config, memoryWindow: scenario.memoryWindow ?? this.config.memoryWindow },
       }),
-      visitorsSection(visitors, this.world.agentState(this.id), { lastSaidAt: this.lastSaidAt, lastSaid: this.lastSaid, canSpeak }),
+      visitorsSection(visitors, this.world.agentState(this.id), {
+        lastSaidAt: this.lastSaidAt,
+        lastSaid: this.lastSaid,
+        canSpeak,
+        conversation: this.#conversation(),
+      }),
     );
     // "say" solo existe si hay alguien y no acaba de hablar (evita que hable en cada turno)
     const tools = [...scenario.tools(this.world, this.id), ...(canSpeak ? [sayTool.definition] : [])];
@@ -258,6 +311,65 @@ export class Agent extends EventEmitter {
       if (!isFree) lastPhysical = { name: call.name, ok: result.ok && !result.queue };
     }
     session.afterTick();
+  }
+
+  /**
+   * Turno de respuesta: el visitante le ha hablado. Una sola petición con "say" como única
+   * herramienta; no gasta turno ni acción física. Lo que decida hacer después lo verá su
+   * percepción normal, que ya incluye la conversación.
+   */
+  async #reply() {
+    const { memory, scenario, session } = this;
+    const heard = this.heard;
+    this.heard = null;
+    const generation = session.generation;
+    const visitors = session.visitorList();
+    if (!visitors.length) return; // se fue antes de que pudiera contestar
+    const tick = memory.tick;
+
+    const perception = withPresence(
+      scenario.perceive({
+        world: this.world,
+        memory,
+        agentId: this.id,
+        tick,
+        config: { ...this.config, memoryWindow: scenario.memoryWindow ?? this.config.memoryWindow },
+      }),
+      visitorsSection(visitors, this.world.agentState(this.id), {
+        lastSaidAt: this.lastSaidAt || Date.now(),
+        lastSaid: this.lastSaid,
+        canSpeak: false,
+        conversation: this.#conversation(),
+      }),
+    );
+
+    this.#setThinking(true);
+    let decision;
+    try {
+      decision = await this.brain.decide({
+        system: scenario.systemPrompt(this.id) + VISITOR_RULES,
+        user: `${perception}\n\n${REPLY_INSTRUCTION}`,
+        tools: [sayTool.definition],
+        ctx: { world: this.world, memory, agentId: this.id, scenario, visitors, heard: heard.text }, // solo lo usa el cerebro simulado
+      });
+      this.#onSuccess();
+    } catch (err) {
+      this.#onError(err);
+      return;
+    } finally {
+      this.#setThinking(false);
+    }
+    if (generation !== session.generation || session.finished) return;
+
+    // Si el modelo contesta con texto en vez de usar la herramienta, se aprovecha el texto
+    const call = decision.toolCalls.find((c) => c.name === 'say' && !c.error);
+    const args = call?.args ?? { message: decision.content ?? '' };
+    this.#recordResult(tick, { name: 'say', args }, sayTool.handler(args, this.#toolContext(tick, visitors)));
+  }
+
+  /** Conversación reciente con el visitante: sus frases y las de este agente. */
+  #conversation() {
+    return this.session.recentConversation().filter((c) => c.from === 'visitor' || c.agentId === this.id);
   }
 
   /** Contexto que reciben las herramientas del escenario. */

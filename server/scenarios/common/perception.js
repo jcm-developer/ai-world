@@ -70,9 +70,10 @@ export function rememberNudge(event, events, what) {
  * del agente (distancia, dirección y si le están mirando).
  * @param {Array<{x:number, z:number, heading:number, since:number}>} visitors
  * @param {{x:number, z:number, heading:number}} me
- * @param {{ lastSaidAt?: number, lastSaid?: string, canSpeak?: boolean }} talk lo último que le dijo y si puede hablar ya
+ * @param {{ lastSaidAt?: number, lastSaid?: string, canSpeak?: boolean, conversation?: Array<{from:string, text:string}> }} talk
+ *   lo último que le dijo, si puede hablar ya y la conversación reciente con el visitante
  */
-export function visitorsSection(visitors, me, { lastSaidAt = 0, lastSaid = '', canSpeak = true } = {}) {
+export function visitorsSection(visitors, me, { lastSaidAt = 0, lastSaid = '', canSpeak = true, conversation = [] } = {}) {
   if (!visitors.length) return [];
   const lines = ['## Presencia'];
   for (const v of visitors) {
@@ -104,6 +105,11 @@ export function visitorsSection(visitors, me, { lastSaidAt = 0, lastSaid = '', c
     const ago = Math.round((Date.now() - lastSaidAt) / 1000);
     lines.push(`Ya le saludaste; no vuelvas a saludar. Lo último que le dijiste (hace ${ago} s): «${lastSaid}».`);
     lines.push(canSpeak ? 'Si tienes algo nuevo que contarle (un descubrimiento, una duda, una hipótesis), puedes decírselo con say.' : 'Acabas de hablarle: ahora céntrate en lo tuyo.');
+  }
+  // Conversación reciente: lo que te ha dicho el visitante y lo que le has contestado
+  if (conversation.some((c) => c.from === 'visitor')) {
+    lines.push('', 'Conversación reciente con el visitante (de la más antigua a la más nueva):');
+    for (const c of conversation) lines.push(`- ${c.from === 'visitor' ? 'Visitante' : 'Tú'}: «${c.text}»`);
   }
   return lines;
 }

@@ -37,11 +37,26 @@
         <span>ratón mirar</span>
         <span><kbd>Shift</kbd> correr</span>
         <span><kbd>F</kbd> mirar a la IA</span>
+        <span><kbd>T</kbd> hablarle (mantén pulsada)</span>
         <span><kbd>V</kbd> vista general</span>
         <span><kbd>Esc</kbd> soltar el ratón</span>
       </div>
     </div>
     <div id="crosshair" class="crosshair" hidden></div>
+    <div id="talk-hint" class="talk-hint" hidden></div>
+
+    <!-- Hablar con la IA: lo que vas diciendo y, al enviarlo, un subtítulo -->
+    <div id="talk" class="talk" hidden>
+      <div class="talk-state"><span class="talk-dot"></span><span class="talk-label"></span></div>
+      <p class="talk-live"></p>
+      <form class="talk-form" hidden>
+        <input type="text" autocomplete="off" spellcheck="true" aria-label="Lo que le dices a la IA" placeholder="Dile algo…" />
+      </form>
+    </div>
+    <div id="caption" class="caption" hidden aria-live="polite">
+      <span class="caption-who"></span>
+      <span class="caption-text"></span>
+    </div>
 
     <div id="connection-banner" class="banner" hidden>Sin conexión con el servidor. Reintentando…</div>
 

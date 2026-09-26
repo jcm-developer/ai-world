@@ -3,6 +3,7 @@
 // - Se crea al entrar el primer navegador en el escenario.
 // - Los agentes solo consultan al modelo mientras alguien está mirando (ahorra peticiones).
 // - Todo lo que ocurre se envía por WebSocket a los navegadores de esa sesión.
+// - Un visitante en primera persona puede hablar al agente más cercano (si está a su alcance).
 
 import { log } from '../logger.js';
 import { Agent } from './agent.js';
@@ -11,6 +12,11 @@ import { createBrain } from './llm.js';
 const SIM_HZ = 20; // frecuencia de la simulación de movimiento
 const POS_BROADCAST_HZ = 10; // frecuencia de envío de posiciones
 const VISITOR_TIMEOUT_MS = 8000; // sin noticias de un visitante en este tiempo, se considera que se fue
+const HEAR_RADIUS_M = 6; // a partir de esta distancia la IA no oye al visitante
+const VISITOR_SAY_MAX = 200; // caracteres por mensaje
+const VISITOR_SAY_MIN_MS = 2500; // pausa mínima entre dos mensajes del mismo visitante
+const CONVERSATION_MAX = 6; // intervenciones que recuerda la conversación
+const CONVERSATION_TTL_MS = 5 * 60 * 1000; // y cuánto tiempo
 
 export class Session {
   /**
@@ -26,6 +32,8 @@ export class Session {
     this.tts = tts;
     this.voiceClients = new Set(); // navegadores con la voz activada
     this.visitors = new Map(); // navegador → { x, z, heading, since, at } (espectadores en primera persona)
+    this.lastHeardAt = new Map(); // navegador → cuándo habló por última vez
+    this.conversation = []; // [{ from: 'visitor' | 'agent', agentId?, text, at }]
     this.generation = 0; // cambia al reiniciar la partida
     this.finished = null; // { outcome, summary } cuando la partida termina
     this.runId = null;
@@ -34,6 +42,7 @@ export class Session {
     this.world = scenario.createWorld(this.worldMemory.get('state', null));
     this.#bindWorld();
     this.finished = this.worldMemory.get('finished', null);
+    this.helped = this.worldMemory.get('helped', false); // alguien le habló durante esta partida
 
     // Personajes no autónomos (p. ej. sospechosos): tienen avatar y voz, pero solo hablan cuando se les pregunta
     this.npcs = scenario.npcs ?? [];
@@ -80,6 +89,7 @@ export class Session {
     this.clients.delete(ws);
     this.voiceClients.delete(ws);
     this.visitors.delete(ws);
+    this.lastHeardAt.delete(ws);
     if (this.clients.size === 0) {
       log.info(this.scenario.id, 'Sin espectadores: los agentes quedan en reposo.');
       this.persist();
@@ -126,7 +136,48 @@ export class Session {
     return [...this.visitors.values()];
   }
 
-  /** Convierte un pensamiento en voz y lo envía a quien tenga la voz activada. */
+  /**
+   * Un visitante habla. Solo cuenta si está en la sala en primera persona y cerca de un agente;
+   * el más cercano le oye y le contestará. Todos los navegadores ven lo que dijo.
+   */
+  hear(ws, { text }) {
+    this.visitorList(); // descarta visitantes que ya no dan señales
+    const visitor = this.visitors.get(ws);
+    const clean = typeof text === 'string' ? text.replace(/\s+/g, ' ').trim().slice(0, VISITOR_SAY_MAX) : '';
+    if (!visitor || !clean) return;
+    const now = Date.now();
+    if (now - (this.lastHeardAt.get(ws) ?? 0) < VISITOR_SAY_MIN_MS) {
+      this.send(ws, 'visitor:said', { text: clean, heard: false, mine: true, reason: 'Espera un momento antes de volver a hablar.' });
+      return;
+    }
+    this.lastHeardAt.set(ws, now);
+
+    const listener = this.finished ? null : this.#nearestAgent(visitor);
+    const reason = this.finished ? 'La partida ha terminado.' : listener ? '' : 'Estás demasiado lejos: acércate para que te oiga.';
+    for (const client of this.clients) {
+      const mine = client === ws;
+      this.send(client, 'visitor:said', { text: clean, heard: Boolean(listener), mine, reason: mine ? reason : '', agentId: listener?.id ?? null });
+    }
+    if (!listener) return;
+
+    this.#addToConversation({ from: 'visitor', text: clean });
+    // En los escenarios con final, la partida queda marcada como «con ayuda humana»
+    if (this.scenario.hasEnding && !this.helped) {
+      this.helped = true;
+      this.worldMemory.set('helped', true);
+      if (this.runId) this.store.markHelped(this.runId);
+    }
+    log.info(this.scenario.id, `Visitante → ${listener.def.name}: “${clean}”`);
+    listener.hear(clean);
+  }
+
+  /** Conversación reciente con los visitantes (intervenciones de los últimos minutos). */
+  recentConversation() {
+    const since = Date.now() - CONVERSATION_TTL_MS;
+    this.conversation = this.conversation.filter((c) => c.at >= since).slice(-CONVERSATION_MAX);
+    return this.conversation;
+  }
+
   /** Un personaje (agente o no) dice algo en voz alta: bocadillo en la escena y voz. */
   speakAs(id, text) {
     const def = this.agents.find((a) => a.id === id)?.def ?? this.npcs.find((n) => n.id === id);
@@ -166,6 +217,8 @@ export class Session {
     this.world = this.scenario.createWorld(null);
     this.#bindWorld();
     this.finished = null;
+    this.helped = false;
+    this.conversation = [];
     for (const a of this.agents) a.resetState();
     if (this.scenario.hasEnding) this.#ensureRun();
     this.broadcast('world:init', this.initialState());
@@ -186,6 +239,7 @@ export class Session {
     return {
       scenario: { id: this.scenario.id, title: this.scenario.title, hasEnding: Boolean(this.scenario.hasEnding) },
       voice: this.tts.mode,
+      talk: { radius: HEAR_RADIUS_M, maxLength: VISITOR_SAY_MAX },
       world: this.world.publicState(),
       agents: [
         ...this.agents.map((a) => ({
@@ -224,6 +278,7 @@ export class Session {
       this.#speak(agent, t.text).catch(() => {});
     });
     agent.on('said', (s) => {
+      if (this.visitors.size) this.#addToConversation({ from: 'agent', agentId: agent.id, text: s.text });
       this.broadcast('said', withId(s));
       this.#speak(agent, s.text, 'said').catch(() => {});
     });
@@ -261,6 +316,26 @@ export class Session {
     return [...this.agents.map((a) => a.id), ...this.npcs.map((n) => n.id)].map((id) => ({ agentId: id, ...this.world.agentState(id) }));
   }
 
+  #addToConversation(entry) {
+    this.conversation.push({ ...entry, at: Date.now() });
+    this.recentConversation();
+  }
+
+  /** El agente autónomo más cercano al visitante, si le puede oír. */
+  #nearestAgent(visitor) {
+    let best = null;
+    let bestDist = HEAR_RADIUS_M;
+    for (const agent of this.agents) {
+      const pos = this.world.agentState(agent.id);
+      const dist = Math.hypot(pos.x - visitor.x, pos.z - visitor.z);
+      if (dist <= bestDist) {
+        best = agent;
+        bestDist = dist;
+      }
+    }
+    return best;
+  }
+
   #ensureRun() {
     this.runId = this.worldMemory.get('runId', null);
     if (!this.runId) {
@@ -276,6 +351,7 @@ export class Session {
   }
 
   #finish(result) {
+    if (this.helped) result = { ...result, helped: true };
     this.finished = result;
     this.worldMemory.set('finished', result);
     if (this.runId) this.store.endRun(this.runId, { ...result, ticks: this.#maxTick() });

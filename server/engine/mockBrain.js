@@ -20,6 +20,11 @@ export class MockBrain {
 
   async decide({ ctx }) {
     await sleep(200); // simula latencia
+    // Turno de respuesta a un visitante: contesta con una frase hecha
+    if (ctx.heard) {
+      const quote = ctx.heard.length > 60 ? `${ctx.heard.slice(0, 59)}…` : ctx.heard;
+      return { toolCalls: [{ name: 'say', args: { message: `Te he oído: «${quote}». Lo tendré en cuenta, pero lo comprobaré yo.` } }], content: '', finishReason: 'tool_calls' };
+    }
     this.turn += 1;
     const toolCalls = ctx.scenario.mockDecide({ ...ctx, turn: this.turn });
     // Si hay un visitante, de vez en cuando le dice algo (para probar la herramienta say)

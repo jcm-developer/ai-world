@@ -590,6 +590,18 @@ h2 em,
   50% { transform: scaleY(1); }
 }
 
+kbd {
+  display: inline-block;
+  min-width: 22px;
+  padding: 0 6px;
+  border: 1px solid var(--line-2);
+  border-bottom-width: 2px;
+  border-radius: 5px;
+  color: var(--text);
+  font: 400 12px/1.6 var(--mono);
+  text-align: center;
+}
+
 .presence-copy > p:not(.eyebrow) {
   margin-top: 24px;
   color: var(--muted);

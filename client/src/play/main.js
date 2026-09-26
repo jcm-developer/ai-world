@@ -9,6 +9,7 @@ import { createFirstPerson } from '../engine/firstPerson.js';
 import { createPanel } from '../engine/panel.js';
 import { connectSocket } from '../engine/socket.js';
 import { createStage } from '../engine/stage.js';
+import { createTalk } from '../engine/talk.js';
 import { createVoice } from '../engine/voice.js';
 import { SCENARIO_VIEWS } from '../scenarios/registry.js';
 
@@ -19,6 +20,7 @@ const DEFAULT_FPS_START = { position: [0, 1.65, 5], lookAt: [0, 1.5, 0] };
 const VISITOR_SEND_MS = 500; // cada cuánto se comunica tu posición en primera persona
 const VISITOR_HEARTBEAT_MS = 3000; // aunque no te muevas, para que el servidor sepa que sigues ahí
 const LOOK_AT_VISITOR_M = 4.5; // la IA gira la cabeza hacia ti si estás a menos de esto
+const DEFAULT_HEAR_RADIUS_M = 6; // lo fija el servidor en world:init; es solo para la indicación en pantalla
 
 const scenarioId = new URLSearchParams(location.search).get('s') ?? 'meridiano';
 const loadView = SCENARIO_VIEWS[scenarioId];
@@ -80,6 +82,14 @@ function start(viewModule) {
     onMessage: handleMessage,
   });
 
+  // Hablar con la IA (pulsar para hablar). Al empezar a hablar, la IA se calla.
+  let hearRadius = DEFAULT_HEAR_RADIUS_M;
+  const talk = createTalk({
+    canTalk: () => stage.mode === 'fps' && fp.active,
+    onStart: () => voice.stop(),
+    onSend: (text) => socket.send('visitor_say', { text }),
+  });
+
   setupAudioControls();
   setupCamera();
 
@@ -90,6 +100,12 @@ function start(viewModule) {
         view.init(p.world);
         panel.init(p);
         document.getElementById('voice-toggle').hidden = p.voice === 'off';
+        hearRadius = p.talk?.radius ?? DEFAULT_HEAR_RADIUS_M;
+        talk.configure(p.talk);
+        break;
+
+      case 'visitor:said':
+        talk.showSaid(p);
         break;
 
       case 'world:update':
@@ -260,10 +276,13 @@ function start(viewModule) {
     reportVisitor(performance.now());
     // La IA gira la cabeza hacia ti cuando estás cerca
     const me = stage.mode === 'fps' ? stage.camera.position : null;
+    let nearest = Infinity;
     for (const a of agents.all()) {
-      const near = me && Math.hypot(me.x - a.avatar.root.position.x, me.z - a.avatar.root.position.z) < LOOK_AT_VISITOR_M;
-      a.avatar.setLookTarget(near ? me : null);
+      const dist = me ? Math.hypot(me.x - a.avatar.root.position.x, me.z - a.avatar.root.position.z) : Infinity;
+      a.avatar.setLookTarget(dist < LOOK_AT_VISITOR_M ? me : null);
+      if (a.def.role !== 'npc') nearest = Math.min(nearest, dist); // solo te oyen los agentes autónomos
     }
+    talk.setReach(me && fp.locked ? (nearest <= hearRadius ? 'near' : 'far') : null);
     agents.update(dt, t);
     view.update(dt, t);
     for (const a of agents.all()) {

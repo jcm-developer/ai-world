@@ -76,7 +76,8 @@ function liveText(s) {
   if (s.live?.viewers) parts.push(`${s.live.viewers} mirando`);
   if (s.runs?.length) {
     const last = s.runs[0];
-    parts.push(last.outcome ? `Última: ${last.outcome.toLowerCase()} en ${last.ticks} turnos` : 'Partida en curso');
+    const helped = last.helped ? ' con ayuda humana' : '';
+    parts.push(last.outcome ? `Última: ${last.outcome.toLowerCase()} en ${last.ticks} turnos${helped}` : `Partida en curso${helped}`);
   } else if (s.tick) {
     parts.push(`${s.tick} ticks vividos`);
   } else {
