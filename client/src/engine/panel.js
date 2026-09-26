@@ -34,6 +34,7 @@ export function createPanel({ onControl }) {
   const modelEl = $('#model');
   const banner = $('#connection-banner');
   const finishedEl = $('#finished');
+  const confirmEl = $('#confirm-reset');
 
   let agents = new Map(); // id → { def, memory, thought, thinking }
   let lastStatus = null;
@@ -52,8 +53,27 @@ export function createPanel({ onControl }) {
     const anyActive = lastStatus?.agents.some((a) => !a.paused && a.state !== 'detenido');
     onControl(anyActive ? 'pause' : 'resume');
   });
+  // Reiniciar pide confirmación con un diálogo propio (no el confirm del navegador)
+  const closeConfirm = () => {
+    confirmEl.hidden = true;
+    resetBtn.focus();
+  };
   resetBtn.addEventListener('click', () => {
-    if (confirm('¿Reiniciar la partida? Se borrará lo que la IA ha aprendido en este escenario.')) onControl('reset');
+    if (document.pointerLockElement) document.exitPointerLock();
+    confirmEl.hidden = false;
+    confirmEl.querySelector('[data-action="cancel"]').focus();
+  });
+  confirmEl.querySelector('[data-action="confirm"]').addEventListener('click', () => {
+    confirmEl.hidden = true;
+    onControl('reset');
+  });
+  confirmEl.querySelector('[data-action="cancel"]').addEventListener('click', closeConfirm);
+  confirmEl.addEventListener('click', (e) => {
+    if (e.target === confirmEl) closeConfirm(); // pulsar fuera lo cierra
+  });
+  confirmEl.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeConfirm();
+    e.stopPropagation(); // con el diálogo abierto, las teclas no mueven la cámara ni abren la voz
   });
   finishedEl.querySelector('[data-action="reset"]').addEventListener('click', () => onControl('reset'));
   // Pulsar fuera de la tarjeta la cierra para poder mirar la escena

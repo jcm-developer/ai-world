@@ -581,6 +581,21 @@ body {
   color: #c3ccda;
 }
 
+.finished-outcome em {
+  font-style: italic;
+  color: var(--accent-soft);
+}
+
+.btn-danger {
+  border-color: rgba(240, 138, 138, 0.45);
+  background: rgba(240, 138, 138, 0.08);
+}
+
+.btn-danger:hover:not(:disabled) {
+  border-color: rgba(240, 138, 138, 0.75);
+  background: rgba(240, 138, 138, 0.16);
+}
+
 .finished-actions {
   display: flex;
   justify-content: center;

@@ -75,6 +75,19 @@
       </div>
     </div>
 
+    <!-- Confirmación antes de reiniciar la partida -->
+    <div id="confirm-reset" class="finished dialog" role="dialog" aria-modal="true" aria-labelledby="confirm-reset-title" hidden>
+      <div class="finished-card">
+        <div class="finished-label">Reiniciar</div>
+        <div class="finished-outcome" id="confirm-reset-title">¿Empezar de <em>cero</em>?</div>
+        <p class="finished-summary">Se borrará lo que la IA ha aprendido en este escenario: notas, descubrimientos y progreso. No se puede deshacer.</p>
+        <div class="finished-actions">
+          <button class="btn btn-danger" type="button" data-action="confirm">Reiniciar partida</button>
+          <button class="btn btn-ghost" type="button" data-action="cancel">Cancelar</button>
+        </div>
+      </div>
+    </div>
+
     <aside id="panel" class="panel">
       <button id="panel-toggle" class="panel-toggle" type="button" aria-label="Plegar panel" aria-expanded="true">
         <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
