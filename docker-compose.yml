@@ -1,0 +1,43 @@
+# AI World en local con Docker.
+#   docker compose up -d --build                       → app (usa el proveedor de .env, p. ej. NVIDIA NIM)
+#   docker compose --profile local-llm up -d --build   → app + Ollama (modelo 100 % local)
+
+services:
+  app:
+    build: .
+    container_name: ai-world
+    ports:
+      - "${PORT:-3000}:3000"
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      # Dentro del contenedor el puerto y la base de datos son fijos
+      PORT: "3000"
+      DB_PATH: /data/ai-world.db
+    volumes:
+      - ai-world-data:/data
+    restart: unless-stopped
+
+  # Modelo local opcional (compatible con OpenAI en http://ollama:11434/v1)
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ai-world-ollama
+    profiles: ["local-llm"]
+    volumes:
+      - ollama-models:/root/.ollama
+    ports:
+      - "11434:11434"
+    restart: unless-stopped
+    # Con GPU NVIDIA (NVIDIA Container Toolkit instalado), descomenta:
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+
+volumes:
+  ai-world-data:
+  ollama-models:

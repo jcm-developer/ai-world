@@ -1,0 +1,303 @@
+/* AI World — página del hub */
+
+:root {
+  --bg: #05070b;
+  --surface: rgba(12, 16, 24, 0.62);
+  --line: rgba(160, 190, 230, 0.12);
+  --text: #e6ecf5;
+  --muted: #8490a3;
+  --faint: #566174;
+  --accent: #8cb8ff;
+  --ok: #7fd6b0;
+  --warn: #f0c674;
+  --sans: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --mono: 'JetBrains Mono', 'Cascadia Code', 'SF Mono', Consolas, monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Fondo: resplandores fríos y retícula muy tenue, como el suelo de la sala */
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(900px 500px at 15% -10%, rgba(111, 164, 255, 0.14), transparent 70%),
+    radial-gradient(700px 500px at 100% 10%, rgba(140, 184, 255, 0.07), transparent 70%),
+    radial-gradient(800px 600px at 50% 120%, rgba(111, 164, 255, 0.08), transparent 70%);
+}
+
+.backdrop::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(150, 175, 215, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(150, 175, 215, 0.045) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: radial-gradient(ellipse at 50% 30%, black 20%, transparent 75%);
+}
+
+.hub {
+  position: relative;
+  z-index: 1;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 28px 24px 48px;
+}
+
+/* --- Cabecera --- */
+.hub-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.wordmark {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.orbit-dot {
+  transform-origin: 16px 16px;
+  animation: orbit 9s linear infinite;
+}
+
+@keyframes orbit {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.chip {
+  padding: 5px 11px;
+  border: 1px solid rgba(240, 198, 116, 0.35);
+  border-radius: 999px;
+  color: var(--warn);
+  font-size: 11.5px;
+  letter-spacing: 0.03em;
+}
+
+/* --- Introducción --- */
+.intro {
+  max-width: 640px;
+  margin: 72px 0 44px;
+}
+
+.intro h1 {
+  margin: 0;
+  font-size: clamp(30px, 4.4vw, 46px);
+  font-weight: 300;
+  line-height: 1.12;
+  letter-spacing: -0.015em;
+}
+
+.intro p {
+  margin: 18px 0 0;
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+/* --- Rejilla de escenarios --- */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.loading {
+  grid-column: 1 / -1;
+  padding: 40px 0;
+  color: var(--faint);
+  font-size: 14px;
+}
+
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 250px;
+  padding: 20px 20px 18px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface);
+  backdrop-filter: blur(12px);
+  color: inherit;
+  text-decoration: none;
+  overflow: hidden;
+  transition: border-color 0.3s, transform 0.3s, background 0.3s;
+}
+
+/* Brillo de color propio de cada escenario */
+.card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(420px 200px at 0% 0%, color-mix(in srgb, var(--card-accent) 12%, transparent), transparent 70%);
+  opacity: 0.7;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+
+.card:not(.playable) {
+  opacity: 0.62;
+}
+
+.card.playable:hover {
+  border-color: color-mix(in srgb, var(--card-accent) 45%, transparent);
+  transform: translateY(-2px);
+}
+
+.card.playable:hover::before {
+  opacity: 1;
+}
+
+.card.playable:focus-visible {
+  outline: 2px solid var(--card-accent);
+  outline-offset: 3px;
+}
+
+/* El primer escenario jugable ocupa dos columnas en pantallas anchas */
+@media (min-width: 900px) {
+  .card.playable:first-child {
+    grid-column: span 2;
+  }
+  .card.playable:first-child .card-title {
+    font-size: 26px;
+  }
+  .card.playable:first-child .card-desc {
+    font-size: 15px;
+    max-width: 460px;
+  }
+}
+
+.card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.card-icon {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--card-accent) 30%, transparent);
+  border-radius: 10px;
+  color: var(--card-accent);
+}
+
+.badge {
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+.badge-disponible {
+  color: var(--ok);
+}
+
+.badge-en_desarrollo {
+  color: var(--warn);
+}
+
+.card-title {
+  margin: 22px 0 0;
+  font-size: 20px;
+  font-weight: 400;
+  letter-spacing: -0.005em;
+}
+
+.card-meta {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--card-accent);
+  letter-spacing: 0.02em;
+}
+
+.card-desc {
+  flex: 1;
+  margin: 12px 0 18px;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--muted);
+}
+
+.card-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 20px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.card-live {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--faint);
+}
+
+.card-live.on::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 7px;
+  border-radius: 50%;
+  background: var(--ok);
+  box-shadow: 0 0 8px var(--ok);
+  vertical-align: 1px;
+}
+
+.card-cta {
+  font-size: 13px;
+  color: var(--text);
+  transition: transform 0.3s;
+}
+
+.card.playable:hover .card-cta {
+  transform: translateX(3px);
+}
+
+
+@media (max-width: 640px) {
+  .hub {
+    padding: 20px 16px 36px;
+  }
+  .intro {
+    margin: 44px 0 32px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .orbit-dot {
+    animation: none;
+  }
+  .card,
+  .card-cta {
+    transition: none;
+  }
+}

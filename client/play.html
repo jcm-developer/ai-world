@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI World</title>
+    <meta name="description" content="Una IA que vive y explora un entorno 3D de forma autónoma." />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='9' fill='none' stroke='%238cb8ff' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23e6ecf5'/%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <div id="scene"></div>
+
+    <nav class="top-controls">
+      <a class="pill" href="/" aria-label="Volver al hub">
+        <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M15 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Hub
+      </a>
+      <button id="camera-toggle" class="pill" type="button" title="Cambiar de cámara (V)">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12z"/><circle cx="12" cy="12" r="2.5"/></svg>
+        <span class="camera-label">Primera persona</span>
+      </button>
+      <button id="voice-toggle" class="pill" type="button" aria-pressed="false" title="Escuchar lo que piensa" hidden>
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10v4M8 7v10M12 4v16M16 8v8M20 11v2"/></svg>
+        Voz
+      </button>
+      <button id="ambience-toggle" class="pill" type="button" aria-pressed="false" title="Sonido ambiente y efectos">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/></svg>
+        Sonido
+      </button>
+    </nav>
+
+    <div id="fps-hint" class="fps-hint" hidden>
+      <div class="fps-hint-title">Haz clic para entrar en la sala</div>
+      <div class="fps-hint-keys">
+        <span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> caminar</span>
+        <span>ratón mirar</span>
+        <span><kbd>Shift</kbd> correr</span>
+        <span><kbd>F</kbd> mirar a la IA</span>
+        <span><kbd>V</kbd> vista general</span>
+        <span><kbd>Esc</kbd> soltar el ratón</span>
+      </div>
+    </div>
+    <div id="crosshair" class="crosshair" hidden></div>
+
+    <div id="connection-banner" class="banner" hidden>Sin conexión con el servidor. Reintentando…</div>
+
+    <div id="finished" class="finished" hidden>
+      <div class="finished-card">
+        <div class="finished-label">Partida terminada</div>
+        <div class="finished-outcome"></div>
+        <p class="finished-summary"></p>
+        <div class="finished-actions">
+          <button class="btn" type="button" data-action="reset">Jugar otra vez</button>
+          <a class="btn btn-ghost" href="/">Volver al hub</a>
+        </div>
+      </div>
+    </div>
+
+    <aside id="panel" class="panel">
+      <button id="panel-toggle" class="panel-toggle" type="button" aria-label="Plegar panel" aria-expanded="true">
+        <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+
+      <div class="panel-body">
+        <header class="panel-header">
+          <div class="brand" id="scenario-title">AI World</div>
+          <div class="status" id="status">
+            <span class="status-dot"></span>
+            <span class="status-text">Conectando…</span>
+          </div>
+        </header>
+
+        <section class="panel-section">
+          <h2 id="thoughts-title">Último pensamiento</h2>
+          <div id="thoughts"><p class="last-thought">—</p></div>
+        </section>
+
+        <section class="panel-section stats" id="stats"></section>
+
+        <section class="panel-section grow">
+          <h2>Memoria reciente</h2>
+          <ol id="notes" class="notes"><li class="empty">Aún no ha guardado nada.</li></ol>
+        </section>
+
+        <section class="panel-section">
+          <h2>Actividad</h2>
+          <ol id="activity" class="activity"></ol>
+        </section>
+
+        <footer class="panel-footer">
+          <button id="agent-toggle" class="btn" type="button" disabled>Pausar</button>
+          <button id="agent-reset" class="btn btn-ghost" type="button" disabled title="Reiniciar la partida">Reiniciar</button>
+          <div id="model" class="model"></div>
+        </footer>
+      </div>
+    </aside>
+
+    <script type="module" src="/src/play/main.js"></script>
+  </body>
+</html>
