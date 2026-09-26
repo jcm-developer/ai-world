@@ -17,6 +17,8 @@ const VISITOR_SAY_MAX = 200; // caracteres por mensaje
 const VISITOR_SAY_MIN_MS = 2500; // pausa mínima entre dos mensajes del mismo visitante
 const CONVERSATION_MAX = 6; // intervenciones que recuerda la conversación
 const CONVERSATION_TTL_MS = 5 * 60 * 1000; // y cuánto tiempo
+const LISTEN_HOLD_MAX_MS = 15000; // como mucho, lo que se queda quieto esperando para contestar
+const LISTEN_HOLD_AFTER_MS = 1200; // y un momento más tras contestar, antes de seguir
 
 export class Session {
   /**
@@ -34,6 +36,7 @@ export class Session {
     this.visitors = new Map(); // navegador → { x, z, heading, since, at } (espectadores en primera persona)
     this.lastHeardAt = new Map(); // navegador → cuándo habló por última vez
     this.conversation = []; // [{ from: 'visitor' | 'agent', agentId?, text, at }]
+    this.holdUntil = 0; // mientras un agente escucha y contesta al visitante, el mundo no avanza
     this.generation = 0; // cambia al reiniciar la partida
     this.finished = null; // { outcome, summary } cuando la partida termina
     this.runId = null;
@@ -168,6 +171,9 @@ export class Session {
       if (this.runId) this.store.markHelped(this.runId);
     }
     log.info(this.scenario.id, `Visitante → ${listener.def.name}: “${clean}”`);
+    // Se para a escucharte en lugar de seguir caminando (hasta que conteste)
+    this.holdUntil = Date.now() + LISTEN_HOLD_MAX_MS;
+    this.broadcast('agents:pos', this.#positions());
     listener.hear(clean);
   }
 
@@ -219,6 +225,7 @@ export class Session {
     this.finished = null;
     this.helped = false;
     this.conversation = [];
+    this.holdUntil = 0;
     for (const a of this.agents) a.resetState();
     if (this.scenario.hasEnding) this.#ensureRun();
     this.broadcast('world:init', this.initialState());
@@ -279,6 +286,7 @@ export class Session {
     });
     agent.on('said', (s) => {
       if (this.visitors.size) this.#addToConversation({ from: 'agent', agentId: agent.id, text: s.text });
+      if (this.holdUntil > Date.now()) this.holdUntil = Date.now() + LISTEN_HOLD_AFTER_MS; // ya contestó: sigue en un momento
       this.broadcast('said', withId(s));
       this.#speak(agent, s.text, 'said').catch(() => {});
     });
@@ -292,7 +300,8 @@ export class Session {
     let lastBroadcast = 0;
     this.simTimer = setInterval(() => {
       const now = Date.now();
-      const moved = this.world.update((now - last) / 1000);
+      // Mientras escucha al visitante, nadie se mueve (el tiempo de pausa no cuenta)
+      const moved = now < this.holdUntil ? false : this.world.update((now - last) / 1000);
       last = now;
       if (moved && now - lastBroadcast >= 1000 / POS_BROADCAST_HZ) {
         lastBroadcast = now;
@@ -313,7 +322,11 @@ export class Session {
 
   /** Posiciones de todos los personajes (agentes y no autónomos). */
   #positions() {
-    return [...this.agents.map((a) => a.id), ...this.npcs.map((n) => n.id)].map((id) => ({ agentId: id, ...this.world.agentState(id) }));
+    const holding = Date.now() < this.holdUntil; // quietos escuchando: sin animación de caminar
+    return [...this.agents.map((a) => a.id), ...this.npcs.map((n) => n.id)].map((id) => {
+      const state = this.world.agentState(id);
+      return { agentId: id, ...state, walking: holding ? false : state.walking };
+    });
   }
 
   #addToConversation(entry) {

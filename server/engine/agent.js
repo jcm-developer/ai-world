@@ -7,8 +7,8 @@
 // - No consulta al modelo mientras su avatar camina, si nadie está mirando o si la partida terminó.
 // - Ante un 429 espera con backoff exponencial; no reintenta en bucle.
 // - Una herramienta inválida se registra y el agente sigue en el siguiente tick.
-// - Si un visitante le habla, su siguiente petición es una respuesta (solo "say"), aunque esté
-//   caminando: se adelanta en la cola, pero sigue sin haber dos peticiones a la vez.
+// - Si un visitante le habla, se detiene y su siguiente petición es una respuesta: "say" y, si le
+//   hace caso, una acción. Se adelanta en la cola, pero sigue sin haber dos peticiones a la vez.
 
 import { EventEmitter } from 'node:events';
 import { log } from '../logger.js';
@@ -275,6 +275,16 @@ export class Agent extends EventEmitter {
       return;
     }
 
+    if (!(await this.#runCalls(tick, toolCalls, visitors, generation))) return;
+    session.afterTick();
+  }
+
+  /**
+   * Ejecuta las herramientas que pidió el modelo: las gratuitas (think, remember, say) y como mucho
+   * una acción física. Devuelve false si la partida se reinició mientras tanto.
+   */
+  async #runCalls(tick, toolCalls, visitors, generation) {
+    const { scenario, session } = this;
     let physicalUsed = false;
     let lastPhysical = null;
     for (const call of toolCalls.slice(0, MAX_CALLS_PER_TICK + 2)) {
@@ -306,17 +316,17 @@ export class Agent extends EventEmitter {
       const ctx = this.#toolContext(tick, visitors);
       // Las herramientas pueden ser asíncronas (p. ej. preguntar a otro personaje y esperar su respuesta)
       const result = call.name === 'say' ? sayTool.handler(call.args ?? {}, ctx) : await scenario.execute(call.name, call.args, ctx);
-      if (generation !== session.generation) return; // la partida se reinició mientras esperaba
+      if (generation !== session.generation) return false; // la partida se reinició mientras esperaba
       this.#recordResult(tick, call, result);
       if (!isFree) lastPhysical = { name: call.name, ok: result.ok && !result.queue };
     }
-    session.afterTick();
+    return true;
   }
 
   /**
-   * Turno de respuesta: el visitante le ha hablado. Una sola petición con "say" como única
-   * herramienta; no gasta turno ni acción física. Lo que decida hacer después lo verá su
-   * percepción normal, que ya incluye la conversación.
+   * Turno de respuesta: el visitante le ha hablado. Una petición con sus herramientas de siempre
+   * más "say": contesta y, si decide hacerle caso, actúa ya. Solo gasta turno si hace algo más que
+   * hablar. Mientras tanto la sesión le mantiene quieto (ver Session.hear).
    */
   async #reply() {
     const { memory, scenario, session } = this;
@@ -325,7 +335,7 @@ export class Agent extends EventEmitter {
     const generation = session.generation;
     const visitors = session.visitorList();
     if (!visitors.length) return; // se fue antes de que pudiera contestar
-    const tick = memory.tick;
+    let tick = memory.tick;
 
     const perception = withPresence(
       scenario.perceive({
@@ -343,13 +353,14 @@ export class Agent extends EventEmitter {
       }),
     );
 
+    const system = scenario.systemPrompt(this.id) + VISITOR_RULES;
     this.#setThinking(true);
     let decision;
     try {
       decision = await this.brain.decide({
-        system: scenario.systemPrompt(this.id) + VISITOR_RULES,
+        system,
         user: `${perception}\n\n${REPLY_INSTRUCTION}`,
-        tools: [sayTool.definition],
+        tools: [...scenario.tools(this.world, this.id), sayTool.definition],
         ctx: { world: this.world, memory, agentId: this.id, scenario, visitors, heard: heard.text }, // solo lo usa el cerebro simulado
       });
       this.#onSuccess();
@@ -361,10 +372,48 @@ export class Agent extends EventEmitter {
     }
     if (generation !== session.generation || session.finished) return;
 
-    // Si el modelo contesta con texto en vez de usar la herramienta, se aprovecha el texto
-    const call = decision.toolCalls.find((c) => c.name === 'say' && !c.error);
-    const args = call?.args ?? { message: decision.content ?? '' };
-    this.#recordResult(tick, { name: 'say', args }, sayTool.handler(args, this.#toolContext(tick, visitors)));
+    // Siempre contesta. Si el modelo actuó pero no habló, se le pide solo la respuesta (una
+    // segunda petición, nunca a la vez que la primera); si aun así no habla, se usa su texto.
+    let calls = decision.toolCalls.filter((c) => !c.error);
+    const answered = calls.some((c) => c.name === 'say' && String(c.args?.message ?? '').trim());
+    if (!answered) {
+      this.#setThinking(true);
+      const answer = await this.#askForAnswer(system, perception, visitors, heard.text);
+      this.#setThinking(false);
+      if (generation !== session.generation || session.finished) return;
+      calls = [answer ?? { name: 'say', args: { message: decision.content ?? '' } }, ...calls.filter((c) => c.name !== 'say')];
+    }
+    // Si le hablaste mientras caminaba, lo que no sea moverse se hace al llegar (como en un turno normal)
+    if (this.world.isBusy(this.id)) {
+      const later = calls.find((c) => !scenario.freeTools.has(c.name) && c.name !== 'say' && c.name !== 'move_to');
+      if (later) {
+        calls = calls.filter((c) => c !== later);
+        if (!this.queued) this.queued = { name: later.name, args: later.args };
+      }
+    }
+    const acts = calls.some((c) => !scenario.freeTools.has(c.name) && c.name !== 'say');
+    if (acts) tick = memory.nextTick(); // hacerle caso cuesta un turno, como cualquier acción
+    // La respuesta va primero, para que diga «vale, voy» antes de ponerse en marcha
+    calls.sort((x, y) => (y.name === 'say') - (x.name === 'say'));
+    if (!(await this.#runCalls(tick, calls, visitors, generation))) return;
+    if (acts) session.afterTick();
+  }
+
+  /** Segunda oportunidad para contestar al visitante: solo con la herramienta "say". */
+  async #askForAnswer(system, perception, visitors, heard) {
+    try {
+      const decision = await this.brain.decide({
+        system,
+        user: `${perception}\n\n${REPLY_INSTRUCTION}\nYa has decidido qué hacer; ahora solo falta que le contestes con "say".`,
+        tools: [sayTool.definition],
+        ctx: { world: this.world, memory: this.memory, agentId: this.id, scenario: this.scenario, visitors, heard }, // solo lo usa el cerebro simulado
+      });
+      this.#onSuccess();
+      return decision.toolCalls.find((c) => c.name === 'say' && String(c.args?.message ?? '').trim()) ?? null;
+    } catch (err) {
+      this.#onError(err);
+      return null;
+    }
   }
 
   /** Conversación reciente con el visitante: sus frases y las de este agente. */

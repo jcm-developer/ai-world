@@ -65,6 +65,8 @@ export function rememberNudge(event, events, what) {
     : ['', `Acabas de ${what}: guarda con remember lo esencial antes de seguir, o lo olvidarás.`];
 }
 
+const RECENT_TALK_MS = 90000; // lo que te dijo el visitante hace menos de esto aún pesa en tu decisión
+
 /**
  * Sección "Presencia": visitantes humanos en la sala respecto a la posición y orientación
  * del agente (distancia, dirección y si le están mirando).
@@ -104,12 +106,17 @@ export function visitorsSection(visitors, me, { lastSaidAt = 0, lastSaid = '', c
   } else {
     const ago = Math.round((Date.now() - lastSaidAt) / 1000);
     lines.push(`Ya le saludaste; no vuelvas a saludar. Lo último que le dijiste (hace ${ago} s): «${lastSaid}».`);
-    lines.push(canSpeak ? 'Si tienes algo nuevo que contarle (un descubrimiento, una duda, una hipótesis), puedes decírselo con say.' : 'Acabas de hablarle: ahora céntrate en lo tuyo.');
+    lines.push(canSpeak ? 'Si tienes algo nuevo que contarle (un descubrimiento, una duda, una hipótesis), puedes decírselo con say.' : 'Acabas de hablarle: no hace falta que vuelvas a hablar ahora.');
   }
   // Conversación reciente: lo que te ha dicho el visitante y lo que le has contestado
   if (conversation.some((c) => c.from === 'visitor')) {
     lines.push('', 'Conversación reciente con el visitante (de la más antigua a la más nueva):');
     for (const c of conversation) lines.push(`- ${c.from === 'visitor' ? 'Visitante' : 'Tú'}: «${c.text}»`);
+    // Lo que te ha dicho hace poco sigue contando al decidir qué hacer
+    const lastVisitor = [...conversation].reverse().find((c) => c.from === 'visitor');
+    if (lastVisitor && Date.now() - lastVisitor.at < RECENT_TALK_MS) {
+      lines.push('Ten en cuenta lo que te ha dicho el visitante al decidir tu siguiente acción: si te propuso algo con sentido que aún no has hecho, hazlo; si no te convence, díselo.');
+    }
   }
   return lines;
 }
