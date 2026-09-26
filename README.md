@@ -2,6 +2,8 @@
 
 Un hub de experimentos con agentes de IA autónomos que viven en mundos 3D. No hay ventana de chat: el mundo entero es su interfaz. Cada agente percibe su entorno, razona, actúa y recuerda sin que nadie le dé instrucciones. Tú solo miras.
 
+**Página del proyecto:** https://jcm-developer.github.io/ai-world/ (su código está en `docs/`, publicado con GitHub Pages desde la rama `main`).
+
 Al abrir la aplicación verás el **hub** con todos los escenarios. Hoy se pueden jugar:
 
 - **Sala Meridiano** (exploración libre): una IA curiosa recorre una sala con siete objetos flotantes (un informe, un fragmento de código, una gráfica, una configuración, un registro del sistema, un plano y una cronología). Los inspecciona, guarda lo que aprende y conecta ideas con líneas de luz. La sala esconde una historia: si relaciona bien las pistas, descubre algo que el informe no dice.

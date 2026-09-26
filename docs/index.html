@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI World · Mundos donde la IA decide sola</title>
+    <meta name="description" content="Agentes de IA autónomos que viven en mundos 3D: perciben, razonan, actúan y recuerdan sin que nadie les dé instrucciones. Tú solo miras. Código abierto y ejecutable en tu máquina." />
+    <meta name="theme-color" content="#05070b" />
+    <link rel="canonical" href="https://jcm-developer.github.io/ai-world/" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="AI World · Mundos donde la IA decide sola" />
+    <meta property="og:description" content="Agentes de IA autónomos en mundos 3D. Sin chat: el mundo entero es su interfaz." />
+    <meta property="og:url" content="https://jcm-developer.github.io/ai-world/" />
+    <meta property="og:image" content="https://jcm-developer.github.io/ai-world/assets/og.jpg" />
+    <meta property="og:locale" content="es_ES" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='9' fill='none' stroke='%238cb8ff' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23e6ecf5'/%3E%3C/svg%3E" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="backdrop" aria-hidden="true"></div>
+
+    <header class="nav">
+      <div class="wrap nav-inner">
+        <a class="wordmark" href="#top" aria-label="AI World, inicio">
+          <svg viewBox="0 0 32 32" width="26" height="26" aria-hidden="true">
+            <circle cx="16" cy="16" r="10" fill="none" stroke="currentColor" stroke-width="1.4" opacity="0.55" />
+            <circle cx="16" cy="16" r="3.2" fill="currentColor" />
+            <circle class="orbit-dot" cx="26" cy="16" r="1.8" fill="var(--accent)" />
+          </svg>
+          <span>AI World</span>
+        </a>
+        <nav class="nav-links" aria-label="Secciones">
+          <a href="#escenarios">Escenarios</a>
+          <a href="#como-funciona">Cómo funciona</a>
+          <a href="#empezar">Empezar</a>
+        </nav>
+        <a class="btn btn-ghost btn-sm" href="https://github.com/jcm-developer/ai-world">
+          <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+          <span>GitHub</span>
+        </a>
+      </div>
+    </header>
+
+    <main id="top">
+      <!-- Portada -->
+      <section class="hero wrap">
+        <div class="hero-copy">
+          <p class="eyebrow">Código abierto · corre en tu máquina</p>
+          <h1>Mundos donde la IA <em>decide sola</em></h1>
+          <p class="lead">Agentes de IA autónomos que viven en escenas 3D. Perciben su entorno, razonan, actúan y recuerdan sin que nadie les dé instrucciones. No hay ventana de chat: el mundo entero es su interfaz. Tú solo miras.</p>
+          <div class="cta">
+            <a class="btn btn-primary" href="#empezar">Pruébalo en 2 minutos</a>
+            <a class="btn btn-ghost" href="https://github.com/jcm-developer/ai-world">Ver el código</a>
+          </div>
+          <ul class="facts" aria-label="Datos clave">
+            <li><strong>3</strong> escenarios jugables</li>
+            <li><strong>0</strong> instrucciones humanas</li>
+            <li><strong>100&nbsp;%</strong> local, si quieres</li>
+          </ul>
+        </div>
+
+        <figure class="hero-shot">
+          <div class="frame">
+            <div class="frame-bar" aria-hidden="true"><i></i><i></i><i></i><span>localhost:3000 · Sala Meridiano</span></div>
+            <img src="assets/meridiano.webp" width="1600" height="900" alt="La Sala Meridiano en vista general: paneles flotantes con documentos, código y gráficas bajo conos de luz, y el panel lateral con la memoria y la actividad del agente." />
+          </div>
+          <div class="thought" aria-live="off">
+            <span class="thought-label">Último pensamiento</span>
+            <p id="thought-text">Antes de sacar conclusiones, quiero ver todas las piezas.</p>
+          </div>
+        </figure>
+      </section>
+
+      <!-- El bucle -->
+      <section id="como-funciona" class="section wrap">
+        <div class="section-head">
+          <p class="eyebrow">Cómo funciona</p>
+          <h2>Un bucle, cuatro verbos</h2>
+          <p>Cada pocos segundos, el servidor le cuenta al agente qué tiene alrededor. El modelo elige una herramienta; el servidor la valida y la ejecuta. Así, una y otra vez, hasta que resuelve el mundo… o se equivoca intentándolo.</p>
+        </div>
+
+        <ol class="loop">
+          <li>
+            <span class="loop-n">01</span>
+            <h3>Percibir</h3>
+            <p>Un texto compacto con lo cercano, el progreso, las notas relevantes y el resultado de sus últimas acciones.</p>
+          </li>
+          <li>
+            <span class="loop-n">02</span>
+            <h3>Pensar</h3>
+            <p>Una sola petición al modelo, con <em>tool calling</em>. El modelo decide <strong>qué</strong> hacer, no cómo moverse.</p>
+          </li>
+          <li>
+            <span class="loop-n">03</span>
+            <h3>Actuar</h3>
+            <p>El servidor comprueba distancias, inventario y cerraduras. Si algo no cuadra, devuelve un error claro y el agente corrige.</p>
+          </li>
+          <li>
+            <span class="loop-n">04</span>
+            <h3>Recordar</h3>
+            <p>Notas, descubrimientos y acciones se guardan en SQLite. Al volver, retoma exactamente donde lo dejó.</p>
+          </li>
+        </ol>
+
+        <div class="log" role="img" aria-label="Ejemplo del registro de actividad de un agente: camina hacia un objeto, lo inspecciona, guarda una nota y piensa en voz alta.">
+          <div class="log-line"><span class="log-t">#4</span><code>move_to</code><span>Caminas hacia registro (8.1 m).</span></div>
+          <div class="log-line"><span class="log-t">#5</span><code>inspect</code><span>Inspeccionas registro por primera vez.</span></div>
+          <div class="log-line"><span class="log-t">#6</span><code>remember</code><span>Nota guardada en memoria.</span></div>
+          <div class="log-line"><span class="log-t">#7</span><code>think</code><span>«Antes de sacar conclusiones, quiero ver todas las piezas.»</span></div>
+        </div>
+      </section>
+
+      <!-- Escenarios -->
+      <section id="escenarios" class="section wrap">
+        <div class="section-head">
+          <p class="eyebrow">Escenarios</p>
+          <h2>Tres experimentos, tres formas de pensar</h2>
+          <p>Cada escenario es un módulo enchufable con su mundo, sus herramientas y su vista 3D. El motor es el mismo.</p>
+        </div>
+
+        <article class="scenario" style="--c: #8cb8ff">
+          <img src="assets/primera-persona.webp" width="1600" height="780" loading="lazy" alt="La Sala Meridiano a ras de suelo: paneles con un documento, código y una gráfica bajo conos de luz, y al fondo el avatar holográfico junto a uno de ellos." />
+          <div class="scenario-copy">
+            <p class="tag">Exploración libre · 1 agente</p>
+            <h3>Sala Meridiano</h3>
+            <p>Una IA curiosa recorre una sala con siete objetos flotantes: un informe, un fragmento de código, una gráfica, una configuración, un registro, un plano y una cronología. Los inspecciona, guarda lo que aprende y traza líneas de luz entre ideas relacionadas.</p>
+            <p class="hint">Nadie le dice qué buscar. Pero la sala esconde una historia que el informe no cuenta.</p>
+          </div>
+        </article>
+
+        <article class="scenario reverse" style="--c: #f0c674">
+          <img src="assets/archivo.webp" width="1600" height="900" loading="lazy" alt="El Archivo visto desde arriba: un sótano en penumbra con escritorio, terminal, caja fuerte, estantería, sillón y la puerta de salida." />
+          <div class="scenario-copy">
+            <p class="tag">Escape room · 1 agente</p>
+            <h3>El Archivo</h3>
+            <p>La IA despierta encerrada en el sótano del laboratorio y tiene 150 turnos para salir. Examina, coge, usa y combina objetos, y descifra cerraduras a partir de pistas.</p>
+            <p class="hint">Tres códigos fallidos seguidos bloquean la cerradura unos turnos: adivinar no compensa. Cada partida queda en el historial.</p>
+          </div>
+        </article>
+
+        <article class="scenario" style="--c: #f08a8a">
+          <img src="assets/detective.webp" width="1600" height="900" loading="lazy" alt="La oficina de La noche del 13: cuatro sospechosos trabajando en sus puestos, mesas, ventanas y pruebas repartidas por la sala." />
+          <div class="scenario-copy">
+            <p class="tag">Detective · 1 detective + 4 sospechosos</p>
+            <h3>La noche del 13</h3>
+            <p>Alguien lanzó el script que provocó la falsa alarma. Una IA detective examina pruebas e interroga a cuatro sospechosos, cada uno con su propia IA, sus secretos y su voz. Alguno miente.</p>
+            <p class="hint">Pregunta, cruza testimonios con pruebas físicas y, cuando lo tiene claro, acusa. Acertar o fallar: así termina el caso.</p>
+          </div>
+        </article>
+
+        <div class="soon">
+          <h3>En camino</h3>
+          <ul>
+            <li style="--c: #7fd6b0"><strong>Carrera de obstáculos</strong><span>IA contra IA</span></li>
+            <li style="--c: #c3a6ff"><strong>Laboratorio de leyes ocultas</strong><span>Método científico</span></li>
+            <li style="--c: #ff9f7a"><strong>El traidor</strong><span>Deducción social</span></li>
+            <li style="--c: #7fc8e8"><strong>Cooperación a ciegas</strong><span>Información asimétrica</span></li>
+            <li style="--c: #e6ecf5"><strong>Tú contra la IA</strong><span>Tiempo real</span></li>
+            <li style="--c: #b8c4d6"><strong>Arena de modelos</strong><span>Banco de pruebas</span></li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- Primera persona -->
+      <section class="section wrap presence">
+        <figure class="frame">
+          <img src="assets/presencia.webp" width="1600" height="780" loading="lazy" alt="Vista en primera persona dentro de El Archivo: el avatar camina por el sótano y saluda al visitante con un bocadillo que dice «Hola. Sigo investigando; puedes quedarte a mirar»." />
+        </figure>
+        <div class="presence-copy">
+          <p class="eyebrow">Entra en la sala</p>
+          <h2>La IA sabe que estás ahí</h2>
+          <p>Haz clic en la escena y camina con <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd>. Tu posición y hacia dónde miras entran en su percepción: te saluda al entrar, gira la cabeza cuando te acercas y, de vez en cuando, te cuenta lo que ha descubierto.</p>
+          <p>Con la voz activada, cada agente habla con su propia voz y el texto se escribe al ritmo del audio.</p>
+        </div>
+      </section>
+
+      <!-- Características -->
+      <section class="section wrap">
+        <div class="section-head">
+          <p class="eyebrow">Por dentro</p>
+          <h2>Hecho para experimentar, no para gastar</h2>
+        </div>
+        <ul class="features">
+          <li>
+            <h3>Cualquier modelo</h3>
+            <p>Funciona con cualquier API compatible con OpenAI que admita <em>tool calling</em>: OpenAI, NVIDIA NIM, OpenRouter u Ollama en local.</p>
+          </li>
+          <li>
+            <h3>Piensa solo si miras</h3>
+            <p>Si cierras la pestaña, los agentes descansan. Tampoco consultan al modelo mientras caminan ni durante una espera por límite de peticiones.</p>
+          </li>
+          <li>
+            <h3>El servidor manda</h3>
+            <p>Es la única fuente de verdad. El navegador solo dibuja, y las soluciones y secretos de cada escenario nunca salen del servidor.</p>
+          </li>
+          <li>
+            <h3>Memoria persistente</h3>
+            <p>SQLite por ámbitos: cada escenario y cada agente tiene la suya. Reinicia uno sin tocar los demás.</p>
+          </li>
+          <li>
+            <h3>Voz y sonido</h3>
+            <p>Voces de OpenAI con respaldo en la voz del navegador, ambiente sutil, pasos y un efecto para cada acción.</p>
+          </li>
+          <li>
+            <h3>Modo simulado</h3>
+            <p>Sin clave y sin gasto: un cerebro falso completa cada escenario para que veas el mundo funcionando al instante.</p>
+          </li>
+        </ul>
+      </section>
+
+      <!-- Empezar -->
+      <section id="empezar" class="section wrap start">
+        <div class="section-head">
+          <p class="eyebrow">Empezar</p>
+          <h2>De cero a mirar en tres comandos</h2>
+          <p>Necesitas Docker, o Node.js 22.13 o superior. La clave del modelo se queda en tu servidor: nunca llega al navegador ni a los logs.</p>
+        </div>
+
+        <ol class="steps">
+          <li>
+            <h3>Clona el repositorio</h3>
+            <div class="code"><pre><code>git clone https://github.com/jcm-developer/ai-world.git
+cd ai-world</code></pre><button class="copy" type="button" aria-label="Copiar comandos">Copiar</button></div>
+          </li>
+          <li>
+            <h3>Configura el modelo</h3>
+            <div class="code"><pre><code>cp .env.example .env
+# pega tu clave en API_KEY, o pon MOCK_LLM=true para probar sin ella</code></pre><button class="copy" type="button" aria-label="Copiar comandos">Copiar</button></div>
+          </li>
+          <li>
+            <h3>Arranca y abre <span class="mono">localhost:3000</span></h3>
+            <div class="code"><pre><code>docker compose up -d --build</code></pre><button class="copy" type="button" aria-label="Copiar comando">Copiar</button></div>
+          </li>
+        </ol>
+
+        <div class="final">
+          <p>¿Prefieres un modelo 100&nbsp;% local, sin Docker o añadir tu propio escenario? Está todo en el README.</p>
+          <a class="btn btn-primary" href="https://github.com/jcm-developer/ai-world#readme">Leer la guía completa</a>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="wrap footer-inner">
+        <span class="wordmark small">
+          <svg viewBox="0 0 32 32" width="20" height="20" aria-hidden="true">
+            <circle cx="16" cy="16" r="10" fill="none" stroke="currentColor" stroke-width="1.4" opacity="0.55" />
+            <circle cx="16" cy="16" r="3.2" fill="currentColor" />
+          </svg>
+          AI World
+        </span>
+        <span>Three.js · Node · SQLite · cualquier modelo con tool calling</span>
+        <a href="https://github.com/jcm-developer/ai-world">github.com/jcm-developer/ai-world</a>
+      </div>
+    </footer>
+
+    <script src="main.js"></script>
+  </body>
+</html>
