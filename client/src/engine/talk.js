@@ -7,6 +7,9 @@
 const Recognition = window.SpeechRecognition ?? window.webkitSpeechRecognition;
 const CAPTION_MS = 6000;
 const NOTICE_MS = 4000;
+const MAX_LISTEN_MS = 30000; // aunque no sueltes la T, se envía pasado este tiempo
+const FAST_FAIL_MS = 400; // si el reconocimiento se corta nada más empezar…
+const MAX_FAST_FAILS = 3; // …tantas veces seguidas, se pasa a escribir
 
 /**
  * @param {object} opts
@@ -26,6 +29,10 @@ export function createTalk({ canTalk, onStart, onSend }) {
   let mode = Recognition ? 'voice' : 'text';
   let rec = null;
   let listening = false;
+  let held = false; // la T sigue pulsada
+  let startedAt = 0;
+  let fastFails = 0;
+  let listenTimer = 0;
   let finalText = '';
   let interimText = '';
   let captionTimer = 0;
@@ -61,12 +68,29 @@ export function createTalk({ canTalk, onStart, onSend }) {
 
   function startListening() {
     if (listening) return;
+    held = true;
+    fastFails = 0;
+    finalText = '';
+    interimText = '';
+    if (!startRecognition()) return;
+    listening = true;
+    label.textContent = 'Escuchando… suelta la T para enviar';
+    live.textContent = '';
+    open('listening');
+    onStart?.();
+    clearTimeout(listenTimer);
+    listenTimer = setTimeout(stopListening, MAX_LISTEN_MS);
+  }
+
+  /**
+   * Una sesión de reconocimiento. Chrome la corta solo (silencio, red, el aviso de permiso del
+   * micrófono…): si la T sigue pulsada, se abre otra y se conserva lo ya transcrito.
+   */
+  function startRecognition() {
     rec = new Recognition();
     rec.lang = 'es-ES';
     rec.interimResults = true;
     rec.continuous = true;
-    finalText = '';
-    interimText = '';
     rec.onresult = (e) => {
       interimText = '';
       for (let i = e.resultIndex; i < e.results.length; i++) {
@@ -77,31 +101,49 @@ export function createTalk({ canTalk, onStart, onSend }) {
     };
     rec.onerror = (e) => {
       if (e.error === 'not-allowed' || e.error === 'service-not-allowed' || e.error === 'audio-capture') {
-        // Sin micrófono o sin permiso: a partir de ahora, por escrito
-        mode = 'text';
-        listening = false;
-        close();
-        notice('No hay acceso al micrófono: pulsa T para escribir tu mensaje.');
+        giveUp('No hay acceso al micrófono: pulsa T para escribir tu mensaje.');
       }
     };
     rec.onend = () => {
       if (!listening) return;
-      listening = false;
-      send(`${finalText}${interimText}`);
+      // Lo reconocido hasta ahora se da por bueno antes de abrir otra sesión
+      finalText += interimText;
+      interimText = '';
+      if (held) {
+        fastFails = performance.now() - startedAt < FAST_FAIL_MS ? fastFails + 1 : 0;
+        if (fastFails >= MAX_FAST_FAILS) giveUp('El reconocimiento de voz no responde: pulsa T para escribir tu mensaje.');
+        else startRecognition();
+        return;
+      }
+      finish();
     };
+    startedAt = performance.now();
     try {
       rec.start();
+      return true;
     } catch {
-      return;
+      return false;
     }
-    listening = true;
-    label.textContent = 'Escuchando… suelta la T para enviar';
-    live.textContent = '';
-    open('listening');
-    onStart?.();
+  }
+
+  function finish() {
+    listening = false;
+    clearTimeout(listenTimer);
+    send(finalText);
+  }
+
+  /** Sin micrófono o sin reconocimiento de voz: a partir de ahora, por escrito. */
+  function giveUp(message) {
+    mode = 'text';
+    listening = false;
+    held = false;
+    clearTimeout(listenTimer);
+    close();
+    notice(message);
   }
 
   function stopListening() {
+    held = false;
     if (!listening) return;
     label.textContent = 'Enviando…';
     rec.stop(); // al terminar llega onend con el texto final
@@ -144,7 +186,11 @@ export function createTalk({ canTalk, onStart, onSend }) {
   window.addEventListener('keyup', (e) => {
     if (e.code === 'KeyT') stopListening();
   });
-  window.addEventListener('blur', stopListening);
+  // Si cambias de pestaña con la T pulsada, el navegador no avisa al soltarla: se envía ya.
+  // (No se usa «blur»: el aviso de permiso del micrófono también quita el foco a la página.)
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) stopListening();
+  });
 
   // --- Subtítulos y avisos ----------------------------------------------------------
 
