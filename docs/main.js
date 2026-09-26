@@ -153,14 +153,12 @@ const mouse = { x: 0.5, y: 0.5, sx: 0.5, sy: 0.5 };
 
 // Paneles flotantes, como los objetos de la Sala Meridiano (x lateral, z profundidad, y altura)
 const PANELS = [
-  { x: -3.1, z: 4.2, y: 1.2 },
-  { x: -1.7, z: 7.5, y: 1.6 },
-  { x: -0.4, z: 10, y: 1.9 },
-  { x: 1.1, z: 8.2, y: 1.5 },
-  { x: 2.6, z: 5, y: 1.3 },
-  { x: -2.3, z: 12, y: 2.1 },
-  { x: 2.2, z: 11.5, y: 2 },
-].map((p, i) => ({ ...p, phase: i * 1.7, lit: 0, target: 0, scan: -1, lines: 3 + (i % 3) }));
+  { x: -3.2, z: 5, y: 1.3 },
+  { x: -1.2, z: 9.5, y: 1.8 },
+  { x: 1.3, z: 8, y: 1.6 },
+  { x: 3, z: 5.6, y: 1.4 },
+  { x: 0.2, z: 13, y: 2.1 },
+].map((p, i) => ({ ...p, phase: i * 1.7, lit: 0, target: 0, scan: -1 }));
 
 const thoughtEl = document.getElementById('agent-thought');
 const thoughtBox = { width: 290, x: 0, y: 0 };
@@ -169,10 +167,10 @@ const agent = { x: 0, z: 6, from: null, to: 0, t: 0, state: 'walk', wait: 0, pre
 let links = [];
 let fading = 0;
 
-const particles = Array.from({ length: 150 }, () => ({
+const particles = Array.from({ length: 50 }, () => ({
   x: Math.random(),
   y: Math.random(),
-  r: Math.random() * 1.4 + 0.3,
+  r: Math.random() * 1 + 0.3,
   s: Math.random() * 0.012 + 0.004,
   tw: Math.random() * Math.PI * 2,
 }));
@@ -202,168 +200,115 @@ function project(x, y, z) {
   return { x: vx + x * k * spread, y: vy + (1.7 - y) * k, k };
 }
 
-function drawFloor(t) {
-  const vx = W / 2 + (mouse.sx - 0.5) * -60;
+function drawFloor() {
   const vy = horizon + (mouse.sy - 0.5) * -24;
+  const hy = vy + (focal * 1.7) / 40;
 
-  // Resplandor del horizonte
-  const glow = ctx.createLinearGradient(0, vy - 60, 0, vy + 120);
-  glow.addColorStop(0, 'rgba(111,164,255,0)');
-  glow.addColorStop(0.35, 'rgba(111,164,255,0.10)');
-  glow.addColorStop(1, 'rgba(111,164,255,0)');
-  ctx.fillStyle = glow;
-  ctx.fillRect(0, vy - 60, W, 180);
-
+  // Horizonte: una sola línea fina que se desvanece en los extremos
   const line = ctx.createLinearGradient(0, 0, W, 0);
   line.addColorStop(0, 'rgba(140,184,255,0)');
-  line.addColorStop(0.5, 'rgba(160,200,255,0.55)');
+  line.addColorStop(0.5, 'rgba(170,205,255,0.4)');
   line.addColorStop(1, 'rgba(140,184,255,0)');
   ctx.strokeStyle = line;
   ctx.lineWidth = 1;
   ctx.beginPath();
-  ctx.moveTo(0, vy + focal * 1.7 / 40);
-  ctx.lineTo(W, vy + focal * 1.7 / 40);
+  ctx.moveTo(0, hy);
+  ctx.lineTo(W, hy);
   ctx.stroke();
 
-  // Líneas que convergen en el punto de fuga
-  ctx.lineWidth = 1;
-  for (let i = -18; i <= 18; i++) {
-    const far = project(i * 1.2, 0, 40);
-    const near = project(i * 1.2, 0, 0.6);
+  // Unas pocas líneas de fuga, apenas insinuadas
+  for (let i = -5; i <= 5; i++) {
+    const far = project(i * 2.4, 0, 40);
+    const near = project(i * 2.4, 0, 0.8);
     const g = ctx.createLinearGradient(0, far.y, 0, H);
     g.addColorStop(0, 'rgba(150,175,215,0)');
-    g.addColorStop(1, 'rgba(150,175,215,0.13)');
+    g.addColorStop(1, 'rgba(150,175,215,0.07)');
     ctx.strokeStyle = g;
     ctx.beginPath();
     ctx.moveTo(far.x, far.y);
     ctx.lineTo(near.x, near.y);
     ctx.stroke();
   }
-
-  // Líneas transversales que avanzan despacio hacia ti
-  const offset = (t * 0.35) % 1.2;
-  for (let d = 40; d > 0.6; d -= 1.2) {
-    const z = d - offset;
-    if (z < 0.6) continue;
-    const p = project(0, 0, z);
-    const a = Math.min(0.16, 1.1 / z) * Math.min(1, (40 - z) / 10);
-    ctx.strokeStyle = `rgba(150,175,215,${a})`;
-    ctx.beginPath();
-    ctx.moveTo(0, p.y);
-    ctx.lineTo(W, p.y);
-    ctx.stroke();
-  }
-  return { vx, vy };
 }
 
 function drawPanel(p, t) {
-  const bob = Math.sin(t * 0.8 + p.phase) * 0.08;
+  const bob = Math.sin(t * 0.6 + p.phase) * 0.06;
   const c = project(p.x, p.y + bob, p.z);
-  const w = 1.25 * c.k;
-  const h = 0.8 * c.k;
+  const w = 1.2 * c.k;
+  const h = 0.76 * c.k;
   const depth = Math.min(1, 6 / p.z);
   p.screen = { x: c.x, y: c.y };
 
-  // Charco de luz en el suelo
-  const floor = project(p.x, 0, p.z);
-  const pool = ctx.createRadialGradient(floor.x, floor.y, 0, floor.x, floor.y, w * 0.9);
-  pool.addColorStop(0, `rgba(170,200,255,${0.1 + p.lit * 0.18})`);
-  pool.addColorStop(1, 'rgba(170,200,255,0)');
-  ctx.fillStyle = pool;
-  ctx.beginPath();
-  ctx.ellipse(floor.x, floor.y, w * 0.9, w * 0.22, 0, 0, Math.PI * 2);
-  ctx.fill();
-
   ctx.save();
   ctx.translate(c.x, c.y);
-  ctx.shadowColor = `rgba(140,184,255,${0.35 + p.lit * 0.5})`;
-  ctx.shadowBlur = 18 + p.lit * 26;
-  ctx.fillStyle = `rgba(10,15,26,${0.82})`;
-  ctx.strokeStyle = `rgba(160,200,255,${(0.35 + p.lit * 0.6) * depth + 0.1})`;
-  ctx.lineWidth = Math.max(0.6, c.k / 180);
-  ctx.beginPath();
-  ctx.rect(-w / 2, -h / 2, w, h);
-  ctx.fill();
+  // Relleno del color del fondo para que los paneles se tapen entre sí
+  ctx.fillStyle = 'rgba(6,9,14,0.92)';
+  ctx.shadowColor = 'rgba(140,184,255,0.6)';
+  ctx.shadowBlur = p.lit * 16;
+  ctx.fillRect(-w / 2, -h / 2, w, h);
   ctx.shadowBlur = 0;
-  ctx.stroke();
+  ctx.strokeStyle = `rgba(170,205,255,${(0.16 + p.lit * 0.5) * depth + 0.04})`;
+  ctx.lineWidth = 1;
+  ctx.strokeRect(-w / 2 + 0.5, -h / 2 + 0.5, w - 1, h - 1);
 
-  // Contenido: renglones que se revelan al inspeccionar
-  const pad = w * 0.1;
-  ctx.fillStyle = `rgba(140,184,255,${0.55 * depth})`;
-  ctx.fillRect(-w / 2 + pad, -h / 2 + pad, w * 0.28, Math.max(1, h * 0.05));
-  for (let i = 0; i < p.lines; i++) {
-    const ly = -h / 2 + pad * 2 + i * h * 0.13;
-    const lw = (w - pad * 2) * (0.5 + ((i * 37 + p.lines * 13) % 45) / 100);
-    ctx.fillStyle = `rgba(200,215,240,${(0.08 + p.lit * 0.3) * depth})`;
-    ctx.fillRect(-w / 2 + pad, ly, lw, Math.max(1, h * 0.035));
-  }
-
-  // Barrido de luz al inspeccionar
+  // Al inspeccionar, una línea de luz recorre el panel de arriba abajo
   if (p.scan >= 0 && p.scan <= 1) {
     const sy = -h / 2 + p.scan * h;
-    const g = ctx.createLinearGradient(0, sy - h * 0.2, 0, sy + 2);
-    g.addColorStop(0, 'rgba(140,184,255,0)');
-    g.addColorStop(1, 'rgba(190,215,255,0.5)');
-    ctx.fillStyle = g;
-    ctx.fillRect(-w / 2, Math.max(-h / 2, sy - h * 0.2), w, Math.min(h * 0.2, sy + h / 2));
+    ctx.strokeStyle = `rgba(210,228,255,${0.7 * Math.sin(p.scan * Math.PI)})`;
+    ctx.beginPath();
+    ctx.moveTo(-w / 2, sy);
+    ctx.lineTo(w / 2, sy);
+    ctx.stroke();
   }
   ctx.restore();
 }
 
 function drawAgent(t) {
   const base = project(agent.x, 0, agent.z);
-  const top = project(agent.x, 1.25, agent.z);
   const k = base.k;
-  const bodyH = base.y - top.y;
-  const walking = agent.state === 'walk';
+  const bob = agent.state === 'walk' ? Math.sin(t * 5) * 0.02 : Math.sin(t * 1.6) * 0.03;
+  const core = project(agent.x, 1.05 + bob, agent.z);
 
-  // Anillo en el suelo
-  const pulse = agent.state === 'inspect' ? 1 + Math.sin(t * 6) * 0.12 : 1;
-  ctx.strokeStyle = 'rgba(170,205,255,0.55)';
-  ctx.lineWidth = 1.2;
+  // Anillo fino en el suelo, que respira al inspeccionar
+  const pulse = agent.state === 'inspect' ? 1 + Math.sin(t * 4) * 0.1 : 1;
+  ctx.strokeStyle = 'rgba(170,205,255,0.35)';
+  ctx.lineWidth = 1;
   ctx.beginPath();
-  ctx.ellipse(base.x, base.y, k * 0.32 * pulse, k * 0.08 * pulse, 0, 0, Math.PI * 2);
+  ctx.ellipse(base.x, base.y, k * 0.26 * pulse, k * 0.065 * pulse, 0, 0, Math.PI * 2);
   ctx.stroke();
-  const halo = ctx.createRadialGradient(base.x, base.y, 0, base.x, base.y, k * 0.4);
-  halo.addColorStop(0, 'rgba(170,205,255,0.35)');
+
+  // Un hilo de luz une el suelo con la presencia
+  const beam = ctx.createLinearGradient(0, core.y, 0, base.y);
+  beam.addColorStop(0, 'rgba(200,222,255,0.55)');
+  beam.addColorStop(1, 'rgba(200,222,255,0)');
+  ctx.strokeStyle = beam;
+  ctx.beginPath();
+  ctx.moveTo(core.x, core.y);
+  ctx.lineTo(base.x, base.y);
+  ctx.stroke();
+
+  // La IA: un punto de luz con un halo suave
+  const r = Math.max(2.5, k * 0.035);
+  const halo = ctx.createRadialGradient(core.x, core.y, 0, core.x, core.y, r * 7);
+  halo.addColorStop(0, 'rgba(170,205,255,0.4)');
   halo.addColorStop(1, 'rgba(170,205,255,0)');
   ctx.fillStyle = halo;
   ctx.beginPath();
-  ctx.ellipse(base.x, base.y, k * 0.4, k * 0.1, 0, 0, Math.PI * 2);
+  ctx.arc(core.x, core.y, r * 7, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#eef4ff';
+  ctx.beginPath();
+  ctx.arc(core.x, core.y, r, 0, Math.PI * 2);
   ctx.fill();
 
-  // Silueta holográfica
-  const sway = walking ? Math.sin(t * 7) * k * 0.012 : 0;
-  ctx.save();
-  ctx.translate(base.x + sway, 0);
-  ctx.shadowColor = 'rgba(140,184,255,0.9)';
-  ctx.shadowBlur = 22;
-  const body = ctx.createLinearGradient(0, top.y, 0, base.y);
-  body.addColorStop(0, 'rgba(220,235,255,0.75)');
-  body.addColorStop(1, 'rgba(140,184,255,0.15)');
-  ctx.fillStyle = body;
-  const bw = k * 0.12;
-  const headR = k * 0.055;
-  ctx.beginPath();
-  ctx.arc(0, top.y + headR, headR, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.roundRect(-bw / 2, top.y + headR * 2.3, bw, bodyH * 0.45, bw * 0.4);
-  ctx.fill();
-  // Piernas que se alternan al caminar
-  const step = walking ? Math.sin(t * 7) * k * 0.025 : 0;
-  ctx.fillRect(-bw * 0.35 + step, top.y + headR * 2.3 + bodyH * 0.45, bw * 0.26, bodyH * 0.42);
-  ctx.fillRect(bw * 0.09 - step, top.y + headR * 2.3 + bodyH * 0.45, bw * 0.26, bodyH * 0.42);
-  ctx.restore();
-
-  // El bocadillo flota sobre la cabeza, a un lado, sin salirse de la pantalla
-  const side = base.x > W * 0.62 ? -1 : 1;
-  let x = side > 0 ? base.x + k * 0.12 : base.x - k * 0.12 - thoughtBox.width;
+  // El pensamiento sigue a la IA, a un lado, sin salirse de la pantalla
+  const side = core.x > W * 0.62 ? -1 : 1;
+  let x = side > 0 ? core.x + r * 6 : core.x - r * 6 - thoughtBox.width;
   x = Math.min(W - thoughtBox.width - 16, Math.max(16, x));
-  // En móvil va bajo los pies, donde hay sitio, para no tapar los paneles
-  const y = W < 700 ? base.y + 18 : top.y - 86;
-  thoughtBox.x += (x - thoughtBox.x) * 0.08;
-  thoughtBox.y += (y - thoughtBox.y) * 0.08;
+  // En móvil va bajo el anillo, donde hay sitio, para no tapar los paneles
+  const y = W < 700 ? base.y + 20 : core.y - 70;
+  thoughtBox.x += (x - thoughtBox.x) * 0.06;
+  thoughtBox.y += (y - thoughtBox.y) * 0.06;
   thoughtEl.style.transform = `translate(${thoughtBox.x}px, ${thoughtBox.y}px)`;
 }
 
@@ -376,32 +321,18 @@ function drawLinks(t) {
     const ex = a.x + (b.x - a.x) * grow;
     const ey = a.y + (b.y - a.y) * grow;
     const alpha = link.alpha;
-    ctx.save();
-    ctx.shadowColor = 'rgba(140,184,255,0.9)';
-    ctx.shadowBlur = 10;
-    ctx.strokeStyle = `rgba(170,205,255,${0.55 * alpha})`;
-    ctx.lineWidth = 1.1;
-    ctx.setLineDash([6, 5]);
-    ctx.lineDashOffset = -t * 20;
+    ctx.strokeStyle = `rgba(170,205,255,${0.3 * alpha})`;
+    ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(a.x, a.y);
     ctx.lineTo(ex, ey);
     ctx.stroke();
-    ctx.setLineDash([]);
-    // Chispa que recorre la conexión
-    if (grow >= 1) {
-      const u = (t * 0.35 + link.seed) % 1;
-      ctx.fillStyle = `rgba(230,240,255,${alpha})`;
-      ctx.beginPath();
-      ctx.arc(a.x + (b.x - a.x) * u, a.y + (b.y - a.y) * u, 2.2, 0, Math.PI * 2);
-      ctx.fill();
-    } else {
-      ctx.fillStyle = `rgba(230,240,255,${alpha})`;
-      ctx.beginPath();
-      ctx.arc(ex, ey, 2.6, 0, Math.PI * 2);
-      ctx.fill();
-    }
-    ctx.restore();
+    // Un punto recorre la conexión (o la va trazando)
+    const u = grow >= 1 ? (t * 0.25 + link.seed) % 1 : grow;
+    ctx.fillStyle = `rgba(235,242,255,${0.9 * alpha})`;
+    ctx.beginPath();
+    ctx.arc(a.x + (b.x - a.x) * u, a.y + (b.y - a.y) * u, 1.6, 0, Math.PI * 2);
+    ctx.fill();
   }
 }
 
@@ -412,7 +343,7 @@ function drawParticles(t, dt) {
       p.y = 1.02;
       p.x = Math.random();
     }
-    const a = 0.25 + Math.sin(t * 1.5 + p.tw) * 0.2;
+    const a = 0.18 + Math.sin(t * 1.2 + p.tw) * 0.12;
     ctx.fillStyle = `rgba(200,220,255,${Math.max(0, a)})`;
     ctx.beginPath();
     ctx.arc(p.x * W + (mouse.sx - 0.5) * -20 * p.r, p.y * H, p.r, 0, Math.PI * 2);
@@ -454,7 +385,7 @@ function think(dt) {
     }
   } else {
     agent.wait -= dt;
-    if (target.scan >= 0) target.scan += dt / 1.2;
+    if (target.scan >= 0) target.scan += dt / 1.4;
     target.target = 1;
     if (agent.wait <= 0) {
       target.scan = -1;
@@ -465,7 +396,7 @@ function think(dt) {
       }
       agent.prev = agent.to;
       agent.visited++;
-      if (agent.visited >= 9 && fading <= 0) fading = 2.4;
+      if (agent.visited >= 7 && fading <= 0) fading = 2.4;
       let next;
       do next = Math.floor(Math.random() * PANELS.length);
       while (next === agent.to);
@@ -491,7 +422,7 @@ function frame(now) {
 
   think(dt);
   ctx.clearRect(0, 0, W, H);
-  drawFloor(t);
+  drawFloor();
 
   // De lejos a cerca, con la IA en su sitio
   const items = [...PANELS.map((p) => ({ z: p.z, draw: () => drawPanel(p, t) })), { z: agent.z, draw: () => drawAgent(t) }];
@@ -511,11 +442,10 @@ addEventListener('pointermove', (e) => {
 
 if (reduceMotion) {
   // Una sola imagen fija: algunos paneles estudiados y conectados
-  [0, 2, 3, 4].forEach((i) => (PANELS[i].lit = 1));
+  [0, 1, 2].forEach((i) => (PANELS[i].lit = 1));
   links = [
-    { a: 0, b: 2, t: 1, alpha: 1, seed: 0.2 },
-    { a: 2, b: 3, t: 1, alpha: 1, seed: 0.5 },
-    { a: 3, b: 4, t: 1, alpha: 1, seed: 0.8 },
+    { a: 0, b: 1, t: 1, alpha: 1, seed: 0.2 },
+    { a: 1, b: 2, t: 1, alpha: 1, seed: 0.5 },
   ];
   running = false;
   requestAnimationFrame(frame);
