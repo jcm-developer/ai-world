@@ -60,3 +60,4 @@ docker compose up -d --build               # despliegue local
 
 - Cualquier cambio visible para el usuario se refleja en el **README** (en español), y en `.env.example` si añade variables de entorno.
 - Marca en **TASKS.md** lo terminado y apunta ahí las ideas que queden pendientes.
+- **Cada desarrollo actualiza la documentación y la landing** en el mismo cambio. La landing (`docs/`, publicada en https://jcm-developer.github.io/ai-world/ con GitHub Pages) presenta el proyecto al público: si añades o cambias un escenario o una función visible, actualiza su texto y, si hace falta, sus capturas (`docs/assets/`, en WebP y sin spoilers). Es un escaparate: nada de instalación ni detalles internos.
