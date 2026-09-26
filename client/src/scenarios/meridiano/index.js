@@ -12,9 +12,10 @@ export const stageOptions = {
   // Punto de inicio en primera persona
   fpsStart: { position: [-5.5, 1.65, 8.8], lookAt: [0, 1.5, -2] },
   fogDensity: 0.026,
+  environment: { hdri: 'studio_small_09', intensity: 0.22 },
 };
 
-export function mount({ scene, renderer, agents }) {
+export function mount({ scene, renderer, stage, agents }) {
   let room = null;
   let walls = [];
   const objects = createObjects(scene);
@@ -25,7 +26,7 @@ export function mount({ scene, renderer, agents }) {
   return {
     /** Estado completo del mundo (al entrar o al reiniciar la partida). */
     init(world) {
-      if (!room) room = createRoom(scene, renderer, world.room);
+      if (!room) room = createRoom(scene, renderer, world.room, stage.shadowMapSize);
       walls = roomWalls(world.room.width, world.room.depth);
       objects.build(world.objects, world.room.height);
       links.setAll(world.connections);

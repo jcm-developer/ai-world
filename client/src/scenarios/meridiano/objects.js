@@ -31,12 +31,15 @@ export function createObjects(scene) {
   let targetId = null;
   let roomHeight = 7;
 
-  const glassMat = new THREE.MeshStandardMaterial({
+  // Vidrio oscuro con barniz: refleja el entorno con un brillo nítido
+  const glassMat = new THREE.MeshPhysicalMaterial({
     color: 0x0b0f17,
-    metalness: 0.4,
-    roughness: 0.18,
+    metalness: 0.3,
+    roughness: 0.12,
+    clearcoat: 1,
+    clearcoatRoughness: 0.05,
     transparent: true,
-    opacity: 0.88,
+    opacity: 0.9,
   });
 
   function build(list, height = roomHeight) {
@@ -72,6 +75,7 @@ export function createObjects(scene) {
     root.add(group);
 
     const slab = new THREE.Mesh(new RoundedBoxGeometry(w + 0.08, h + 0.08, 0.035, 4, 0.02), glassMat);
+    slab.castShadow = true; // su sombra cae en el suelo bajo el foco cenital
     group.add(slab);
 
     const screenMat = new THREE.MeshBasicMaterial({

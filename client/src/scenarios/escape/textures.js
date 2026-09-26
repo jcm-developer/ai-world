@@ -145,17 +145,3 @@ export function uvTextTexture(text, { width = 256, height = 256, size = 180 } = 
     ctx.fillText(text, w / 2, h / 2 + size * 0.05);
   });
 }
-
-/** Retícula sutil para el suelo. */
-export function floorGridTexture(repeatX, repeatY) {
-  const tex = canvasTexture(512, 512, (ctx, w, h) => {
-    ctx.fillStyle = '#0c0d10';
-    ctx.fillRect(0, 0, w, h);
-    ctx.strokeStyle = 'rgba(230, 200, 150, 0.07)';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(0, 0, w, h);
-  });
-  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-  tex.repeat.set(repeatX, repeatY);
-  return tex;
-}

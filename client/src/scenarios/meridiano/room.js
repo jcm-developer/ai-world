@@ -1,5 +1,6 @@
-// La sala: suelo oscuro con reflejos suaves, paredes limpias, luz blanca y azul fría,
-// líneas de luz perimetrales y partículas en suspensión que dan volumen al aire.
+// La sala: suelo de hormigón oscuro con reflejos suaves, paredes de yeso, luz blanca y azul
+// fría, un foco cenital con sombras, líneas de luz perimetrales y partículas en suspensión que
+// dan volumen al aire. Las superficies usan texturas reales (engine/pbr.js).
 //
 // Las paredes solo se ven por su cara interior: desde fuera (la cámara) la pared más
 // cercana desaparece sola, como en una maqueta.
@@ -7,18 +8,19 @@
 import * as THREE from 'three';
 import { RectAreaLightUniformsLib } from 'three/addons/lights/RectAreaLightUniformsLib.js';
 import { Reflector } from 'three/addons/objects/Reflector.js';
+import { pbr, worldUV } from '../../engine/pbr.js';
 
 const WHITE = 0xf2f5fa;
 const COLD_BLUE = 0x6fa4ff;
 
-export function createRoom(scene, renderer, room) {
+export function createRoom(scene, renderer, room, shadowMapSize = 2048) {
   const { width: W, depth: D, height: H } = room;
   const group = new THREE.Group();
   scene.add(group);
 
   RectAreaLightUniformsLib.init();
 
-  // --- Suelo: espejo tenue + capa oscura semitransparente con retícula fina
+  // --- Suelo: espejo tenue + hormigón oscuro semitransparente + retícula muy fina
   const pr = renderer.getPixelRatio();
   const mirror = new Reflector(new THREE.PlaneGeometry(W, D), {
     textureWidth: Math.round(window.innerWidth * pr * 0.5),
@@ -30,30 +32,28 @@ export function createRoom(scene, renderer, room) {
   group.add(mirror);
 
   const floor = new THREE.Mesh(
-    new THREE.PlaneGeometry(W, D),
-    new THREE.MeshStandardMaterial({
-      map: gridTexture(W, D),
-      color: 0xffffff,
-      roughness: 0.6,
-      metalness: 0.1,
-      transparent: true,
-      opacity: 0.84,
-    }),
+    worldUV(new THREE.PlaneGeometry(W, D)),
+    pbr('concrete_floor_worn_001', { size: 3, color: 0x4a505c, roughness: 0.7, transparent: true, opacity: 0.86 }),
   );
   floor.rotation.x = -Math.PI / 2;
   floor.position.y = 0.003;
+  floor.receiveShadow = true; // es semitransparente (deja ver el reflejo), pero recibe sombras
   group.add(floor);
 
-  // --- Paredes (cara interior) y techo
-  const wallMat = new THREE.MeshStandardMaterial({
-    color: 0x1a1f28,
-    roughness: 0.92,
-    metalness: 0.0,
-    // Degradado emisivo: la pared recibe el reflejo de la luz perimetral y se oscurece hacia arriba
-    emissive: 0x9fbfff,
-    emissiveMap: wallWashTexture(),
-    emissiveIntensity: 0.1,
-  });
+  const grid = new THREE.Mesh(
+    new THREE.PlaneGeometry(W, D),
+    new THREE.MeshBasicMaterial({ map: gridTexture(W, D), transparent: true, depthWrite: false }),
+  );
+  grid.rotation.x = -Math.PI / 2;
+  grid.position.y = 0.005;
+  group.add(grid);
+
+  // --- Paredes (cara interior) y techo: yeso oscuro
+  const wallMat = pbr('plaster_grey_04', { size: 3, color: 0x2e3440, normalScale: 0.8 });
+  // Degradado emisivo: la pared recibe el reflejo de la luz perimetral y se oscurece hacia arriba
+  wallMat.emissive = new THREE.Color(0x9fbfff);
+  wallMat.emissiveMap = wallWashTexture();
+  wallMat.emissiveIntensity = 0.1;
   const walls = [
     { w: W, pos: [0, H / 2, -D / 2], rot: 0 }, // fondo
     { w: W, pos: [0, H / 2, D / 2], rot: Math.PI }, // frente
@@ -61,7 +61,8 @@ export function createRoom(scene, renderer, room) {
     { w: D, pos: [W / 2, H / 2, 0], rot: -Math.PI / 2 }, // derecha
   ];
   for (const w of walls) {
-    const mesh = new THREE.Mesh(new THREE.PlaneGeometry(w.w, H), wallMat);
+    const mesh = new THREE.Mesh(worldUV(new THREE.PlaneGeometry(w.w, H)), wallMat);
+    mesh.receiveShadow = true;
     mesh.position.set(...w.pos);
     mesh.rotation.y = w.rot;
     group.add(mesh);
@@ -78,7 +79,7 @@ export function createRoom(scene, renderer, room) {
     group.add(cove);
   }
 
-  const ceiling = new THREE.Mesh(new THREE.PlaneGeometry(W, D), wallMat);
+  const ceiling = new THREE.Mesh(worldUV(new THREE.PlaneGeometry(W, D)), wallMat);
   ceiling.rotation.x = Math.PI / 2;
   ceiling.position.y = H;
   group.add(ceiling);
@@ -109,6 +110,19 @@ export function createRoom(scene, renderer, room) {
   side.position.set(-W / 2 + 0.1, 2.5, 0);
   side.lookAt(0, 1.2, 0);
   scene.add(side);
+
+  // Foco cenital frío: los paneles flotantes proyectan su sombra en el suelo
+  const key = new THREE.SpotLight(WHITE, 26, H * 3, 0.85, 0.9, 1.4);
+  key.position.set(0, H - 0.2, 2);
+  key.target.position.set(0, 0, -1.5);
+  key.castShadow = true;
+  key.shadow.mapSize.set(shadowMapSize, shadowMapSize);
+  key.shadow.bias = -0.0004;
+  key.shadow.normalBias = 0.02;
+  key.shadow.radius = 6;
+  key.shadow.camera.near = 0.5;
+  key.shadow.camera.far = H * 3;
+  scene.add(key, key.target);
 
   // --- Partículas de polvo en suspensión
   const dust = createDust(W, D, H);
@@ -145,9 +159,8 @@ function gridTexture(W, D) {
   const canvas = document.createElement('canvas');
   canvas.width = canvas.height = size;
   const ctx = canvas.getContext('2d');
-  ctx.fillStyle = '#0a0c11';
-  ctx.fillRect(0, 0, size, size);
-  ctx.strokeStyle = 'rgba(150, 175, 215, 0.10)';
+  ctx.clearRect(0, 0, size, size);
+  ctx.strokeStyle = 'rgba(150, 175, 215, 0.16)';
   ctx.lineWidth = 2;
   ctx.strokeRect(0, 0, size, size);
   const tex = new THREE.CanvasTexture(canvas);

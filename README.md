@@ -123,7 +123,7 @@ Con GPU NVIDIA, descomenta el bloque `deploy` del servicio `ollama` en `docker-c
 
 **Dentro de un escenario** (Sala Meridiano):
 
-- **La sala**: suelo oscuro con reflejos suaves, paredes limpias, luz blanca y azul fría, conos de luz volumétrica y partículas en suspensión.
+- **La sala**: suelo de hormigón oscuro con reflejos suaves, paredes de yeso, luz blanca y azul fría, un foco cenital que proyecta la sombra de los paneles, conos de luz volumétrica y partículas en suspensión.
 - **El avatar**: una silueta humanoide holográfica (shader translúcido con brillo de borde fresnel) que camina hacia los objetos.
 - **Los objetos**: paneles flotantes. Antes de inspeccionarlos solo muestran su descripción corta; al inspeccionarlos, un barrido de luz revela su contenido.
 - **Las conexiones**: líneas de luz finas entre objetos relacionados, con el motivo flotando unos segundos.
@@ -131,6 +131,8 @@ Con GPU NVIDIA, descomenta el bloque `deploy` del servicio `ollama` en `docker-c
 - **El panel lateral** (plegable): estado, último pensamiento, progreso, memoria reciente, actividad y botones **Pausar / Reanudar** y **Reiniciar** (borra lo aprendido en ese escenario y empieza de cero).
 
 **En El Archivo** además verás el inventario (abajo a la izquierda), las luces de cada cerradura (rojo cerrada, ámbar bloqueada, verde abierta), el haz violeta de la linterna UV y, al final, la puerta abriéndose hacia un pasillo iluminado.
+
+**Gráficos realistas.** Las tres salas usan texturas PBR escaneadas (hormigón, yeso, madera, metal, cuero, tela) con su tamaño real, iluminación de entorno con un HDRI por escenario, sombras suaves (los fluorescentes y la lámpara del Archivo, el sol que entra por los ventanales de la oficina y dibuja las lamas de las persianas en el suelo) y un postproceso con oclusión ambiental (GTAO), bloom sutil y antialiasing (SMAA). En pantallas táctiles se usa una calidad **baja** (sin GTAO ni SMAA y sombras más pequeñas); puedes forzarla con `?quality=baja` o `?quality=alta` en la URL. Las texturas y los HDRI son de [Poly Haven](https://polyhaven.com) (licencia CC0) y están en `client/public/assets/`.
 
 **Voz y sonido**: arriba a la izquierda tienes dos botones. **Voz** lee en voz alta cada pensamiento (cada agente tiene su voz y su tono) y **Sonido** activa un ambiente sutil de sala, los pasos del avatar y un efecto discreto para cada acción (examinar, recordar, coger, abrir una cerradura, fallar un código, la puerta…). El navegador recuerda tu elección.
 
@@ -297,4 +299,4 @@ Para cambiar los objetos de la Sala Meridiano, edita `OBJECTS` en `server/scenar
 | "En espera · N s" frecuente | Demasiadas peticiones: sube `TICK_MS` (p. ej. 5000) |
 | El agente responde con texto y no actúa | El modelo no admite tool calling: elige otro |
 | `Cannot find module 'node:sqlite'` | Node es anterior a 22.13: actualízalo o usa Docker |
-| La escena va lenta | Tarjeta gráfica modesta: reduce el tamaño de la ventana o cierra otras pestañas con 3D |
+| La escena va lenta | Tarjeta gráfica modesta: añade `?quality=baja` a la URL, reduce el tamaño de la ventana o cierra otras pestañas con 3D |

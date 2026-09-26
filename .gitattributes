@@ -2,3 +2,6 @@
 * text=auto eol=lf
 *.png binary
 *.mp3 binary
+*.webp binary
+*.hdr binary
+*.jpg binary

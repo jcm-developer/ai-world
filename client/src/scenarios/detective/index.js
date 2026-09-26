@@ -12,6 +12,9 @@ export const stageOptions = {
   camera: { position: [0.5, 9.5, 12.5], target: [0, 0.8, -1.2] },
   fpsStart: { position: [-1.5, 1.65, 6.2], lookAt: [0, 1.2, -3] },
   fogDensity: 0.012,
+  exposure: 1.0,
+  environment: { hdri: 'unfinished_office', intensity: 0.55 },
+  ao: { radius: 0.5, intensity: 1 },
 };
 
 const CARD_W = 1.25;
@@ -88,7 +91,7 @@ export function mount({ scene, renderer, stage, agents }) {
   return {
     init(world) {
       if (!office) {
-        office = createOffice(scene, world);
+        office = createOffice(scene, world, stage.shadowMapSize);
         walls = roomWalls(world.room.width, world.room.depth);
         for (const e of world.evidence) {
           const el = document.createElement('div');

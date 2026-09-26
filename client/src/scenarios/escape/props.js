@@ -5,6 +5,7 @@
 
 import * as THREE from 'three';
 import { CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+import { enableShadows, pbr, worldUV } from '../../engine/pbr.js';
 import { DOOR } from './room.js';
 import { clockFaceTexture, exitSignTexture, prismPosterTexture, terminalTexture, uvTextTexture } from './textures.js';
 
@@ -22,29 +23,35 @@ const HIDDEN_LABELS = new Set(['cajon']); // comparte etiqueta con el escritorio
 // Contenedor donde se dibuja cada objeto portátil mientras no se haya cogido
 const ITEM_HOME = { linterna_uv: 'cajon', tarjeta: 'caja_fuerte', nota_a: 'caja_fuerte', nota_b: 'papelera' };
 
+// Materiales con texturas reales (UV en metros, ver engine/pbr.js)
 const mat = {
-  metal: new THREE.MeshStandardMaterial({ color: 0x3a3f48, metalness: 0.75, roughness: 0.35 }),
-  darkMetal: new THREE.MeshStandardMaterial({ color: 0x23262d, metalness: 0.7, roughness: 0.4 }),
-  wood: new THREE.MeshStandardMaterial({ color: 0x4a3a2e, roughness: 0.7 }),
-  leather: new THREE.MeshStandardMaterial({ color: 0x4d3427, roughness: 0.6 }),
-  paper: new THREE.MeshStandardMaterial({ color: 0xe8e4da, roughness: 0.9 }),
-  ceramic: new THREE.MeshStandardMaterial({ color: 0x2c2f35, roughness: 0.5 }),
-  leaf: new THREE.MeshStandardMaterial({ color: 0x2f6b45, roughness: 0.8 }),
-  bookGrey: new THREE.MeshStandardMaterial({ color: 0x3b3d44, roughness: 0.8 }),
+  metal: pbr('metal_plate', { size: 0.9, color: 0x9ea3ab }),
+  darkMetal: pbr('metal_plate', { size: 0.9, color: 0x4b4f57, metalness: 0.8 }),
+  wood: pbr('wood_table_worn', { size: 1.4 }),
+  leather: pbr('brown_leather', { size: 0.7, normalScale: 1.2 }),
+  paper: new THREE.MeshStandardMaterial({ color: 0xe8e4da, roughness: 0.92 }),
+  ceramic: new THREE.MeshPhysicalMaterial({ color: 0x2c2f35, roughness: 0.35, clearcoat: 0.6, clearcoatRoughness: 0.25 }),
+  leaf: new THREE.MeshStandardMaterial({ color: 0x2f6b45, roughness: 0.65, side: THREE.DoubleSide }),
+  bookGrey: pbr('fabric_pattern_07', { size: 0.4, color: 0x6a6d74 }),
 };
 
 const box = (w, h, d, material, x = 0, y = 0, z = 0) => {
-  const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), material);
+  const m = new THREE.Mesh(worldUV(new THREE.BoxGeometry(w, h, d)), material);
   m.position.set(x, y, z);
   return m;
 };
+
+/** La textura de tela es gris azulada: se aclara el color para que el tinte se parezca al original. */
+function bookTint(hex) {
+  return new THREE.Color(hex).multiplyScalar(1.6);
+}
 
 function ledMesh(radius = 0.018) {
   const m = new THREE.Mesh(new THREE.SphereGeometry(radius, 12, 8), new THREE.MeshBasicMaterial({ color: LED.off, toneMapped: false }));
   return m;
 }
 
-export function createProps(scene, state) {
+export function createProps(scene, state, shadowMapSize = 2048) {
   const root = new THREE.Group();
   scene.add(root);
   const fixtures = new Map(); // id → { group, anchor: Vector3 local, ... }
@@ -93,6 +100,8 @@ export function createProps(scene, state) {
       entry.label = el;
     }
   }
+
+  enableShadows(root);
 
   // --- Constructores por tipo ---------------------------------------------------------
 
@@ -190,9 +199,23 @@ export function createProps(scene, state) {
     shade.position.set(0, 0.44, 0.05);
     shade.rotation.x = 0.5;
     lamp.add(shade);
-    const bulb = new THREE.PointLight(0xffc98a, 1.2, 3.5, 1.8);
-    bulb.position.set(0, 0.38, 0.1);
-    lamp.add(bulb);
+    const bulbMesh = new THREE.Mesh(new THREE.SphereGeometry(0.025, 12, 8), new THREE.MeshBasicMaterial({ color: 0xffe2b0, toneMapped: false }));
+    bulbMesh.position.set(0, 0.4, 0.07);
+    lamp.add(bulbMesh);
+    const bulb = new THREE.SpotLight(0xffc98a, 6, 4, 0.95, 0.7, 1.6);
+    bulb.position.set(0, 0.4, 0.07);
+    bulb.target.position.set(0.25, -0.4, 0.55);
+    bulb.castShadow = true;
+    bulb.shadow.mapSize.set(shadowMapSize / 2, shadowMapSize / 2);
+    bulb.shadow.bias = -0.0005;
+    bulb.shadow.normalBias = 0.02;
+    bulb.shadow.radius = 4;
+    bulb.shadow.camera.near = 0.05;
+    lamp.add(bulb, bulb.target);
+    // Resplandor suave alrededor de la lámpara (sin sombras)
+    const halo = new THREE.PointLight(0xffc98a, 0.5, 2.5, 1.8);
+    halo.position.set(0, 0.4, 0.1);
+    lamp.add(halo);
     lamp.position.set(-0.62, 0.78, -0.2);
     g.add(lamp);
     entry.anchor.set(0, 0.85, 0.2);
@@ -215,7 +238,7 @@ export function createProps(scene, state) {
       const x = -0.42 + i * 0.12;
       bookX[color] = x;
       const h = 0.3 + ((i * 37) % 5) * 0.012;
-      g.add(box(0.095, h, 0.24, new THREE.MeshStandardMaterial({ color: BOOK_COLORS[color] ?? 0x888888, roughness: 0.6 }), x, 0.965 + h / 2, 0.02));
+      g.add(box(0.095, h, 0.24, pbr('fabric_pattern_07', { size: 0.4, color: bookTint(BOOK_COLORS[color] ?? 0x888888) }), x, 0.965 + h / 2, 0.02));
     });
     // Libros neutros en las otras baldas
     for (const y of [0.47, 1.47]) {

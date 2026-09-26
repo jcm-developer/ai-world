@@ -1,38 +1,47 @@
 // La oficina técnica del laboratorio Meridiano: sala, luz de día, mobiliario detallado y las
 // pruebas como objetos físicos. Todo se construye con primitivas a partir de la lista de muebles
 // y pruebas que envía el servidor (la misma que usa para la búsqueda de caminos).
+//
+// El sol entra por los ventanales y proyecta sobre el suelo la sombra de los marcos y las lamas
+// de las persianas; las superficies usan texturas reales (engine/pbr.js).
 
 import * as THREE from 'three';
 import { RectAreaLightUniformsLib } from 'three/addons/lights/RectAreaLightUniformsLib.js';
+import { enableShadows, pbr, worldUV } from '../../engine/pbr.js';
 
 const SANS = "'Inter', 'Segoe UI', system-ui, sans-serif";
 const MONO = "'JetBrains Mono', 'Cascadia Code', Consolas, monospace";
 
+// Materiales con texturas reales (UV en metros, ver engine/pbr.js)
 const mat = {
-  wall: new THREE.MeshStandardMaterial({ color: 0x3a3d45, roughness: 0.92 }),
-  ceiling: new THREE.MeshStandardMaterial({ color: 0x2c2e34, roughness: 0.95 }),
-  deskTop: new THREE.MeshStandardMaterial({ color: 0x8a847a, roughness: 0.6 }),
-  wood: new THREE.MeshStandardMaterial({ color: 0x6b5443, roughness: 0.6 }),
-  metal: new THREE.MeshStandardMaterial({ color: 0x5a606b, metalness: 0.7, roughness: 0.35 }),
-  dark: new THREE.MeshStandardMaterial({ color: 0x1e2127, metalness: 0.4, roughness: 0.45 }),
-  black: new THREE.MeshStandardMaterial({ color: 0x0f1115, roughness: 0.5 }),
-  fabric: new THREE.MeshStandardMaterial({ color: 0x2b3444, roughness: 0.9 }),
-  paper: new THREE.MeshStandardMaterial({ color: 0xece8df, roughness: 0.9 }),
-  cork: new THREE.MeshStandardMaterial({ color: 0x9c7a55, roughness: 0.95 }),
-  leaf: new THREE.MeshStandardMaterial({ color: 0x3a7a50, roughness: 0.8 }),
-  ceramic: new THREE.MeshStandardMaterial({ color: 0xd8d4cc, roughness: 0.4 }),
-  red: new THREE.MeshStandardMaterial({ color: 0xa8322b, roughness: 0.5, metalness: 0.2 }),
-  blueGlass: new THREE.MeshStandardMaterial({ color: 0x7fb0e0, roughness: 0.1, transparent: true, opacity: 0.55 }),
-  coat: new THREE.MeshStandardMaterial({ color: 0x6d7078, roughness: 0.85 }),
+  wall: pbr('painted_plaster_wall', { size: 2.4, color: 0xe2e3e6, normalScale: 0.6 }),
+  ceiling: pbr('painted_plaster_wall', { size: 3, color: 0xf0f1f3, normalScale: 0.4 }),
+  deskTop: pbr('oak_veneer_01', { size: 1.3, roughness: 0.7 }),
+  wood: pbr('walnut_veneer_02', { size: 1.3, roughness: 0.75 }),
+  metal: new THREE.MeshPhysicalMaterial({ color: 0xb4b9c1, metalness: 1, roughness: 0.32 }),
+  dark: new THREE.MeshStandardMaterial({ color: 0x24272d, metalness: 0.35, roughness: 0.5 }),
+  black: new THREE.MeshStandardMaterial({ color: 0x0f1115, roughness: 0.45 }),
+  fabric: pbr('fabric_pattern_07', { size: 0.09, color: 0x5d6678, normalScale: 0.8 }),
+  paper: new THREE.MeshStandardMaterial({ color: 0xece8df, roughness: 0.92 }),
+  cork: pbr('fabric_pattern_07', { size: 0.25, color: 0xe0a370, normalScale: 2 }),
+  leaf: new THREE.MeshStandardMaterial({ color: 0x3a7a50, roughness: 0.65, side: THREE.DoubleSide }),
+  ceramic: new THREE.MeshPhysicalMaterial({ color: 0xdedad2, roughness: 0.35, clearcoat: 0.5, clearcoatRoughness: 0.3 }),
+  red: new THREE.MeshPhysicalMaterial({ color: 0xa8322b, roughness: 0.4, metalness: 0.3, clearcoat: 0.6 }),
+  blueGlass: new THREE.MeshPhysicalMaterial({ color: 0x9cc4ec, roughness: 0.05, transparent: true, opacity: 0.45, ior: 1.45, clearcoat: 1 }),
+  coat: pbr('fabric_pattern_07', { size: 0.1, color: 0x7d8189 }),
 };
+// Paredes y techo son planos de una cara: proyectan sombra por las dos para que el sol
+// solo entre por las ventanas
+mat.wall.shadowSide = THREE.DoubleSide;
+mat.ceiling.shadowSide = THREE.DoubleSide;
 
 const box = (w, h, d, material, x = 0, y = 0, z = 0) => {
-  const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), material);
+  const m = new THREE.Mesh(worldUV(new THREE.BoxGeometry(w, h, d)), material);
   m.position.set(x, y, z);
   return m;
 };
 const cyl = (rt, rb, h, material, x = 0, y = 0, z = 0, seg = 20) => {
-  const m = new THREE.Mesh(new THREE.CylinderGeometry(rt, rb, h, seg), material);
+  const m = new THREE.Mesh(worldUV(new THREE.CylinderGeometry(rt, rb, h, seg)), material);
   m.position.set(x, y, z);
   return m;
 };
@@ -61,7 +70,7 @@ function screenTexture(hue = '#8cb8ff', lines = 14) {
   });
 }
 
-export function createOffice(scene, world) {
+export function createOffice(scene, world, shadowMapSize = 2048) {
   const { room } = world;
   const root = new THREE.Group();
   scene.add(root);
@@ -76,37 +85,14 @@ export function createOffice(scene, world) {
 
   function buildRoom(group, { width: W, depth: D, height: H }) {
     const carpet = new THREE.Mesh(
-      new THREE.PlaneGeometry(W, D),
-      new THREE.MeshStandardMaterial({
-        map: canvasTex(512, 512, (ctx, w, h) => {
-          // Losetas de moqueta con una variación sutil de tono
-          for (let y = 0; y < 4; y++) {
-            for (let x = 0; x < 4; x++) {
-              const v = 34 + ((x * 7 + y * 13) % 6);
-              ctx.fillStyle = `rgb(${v}, ${v + 4}, ${v + 12})`;
-              ctx.fillRect(x * 128, y * 128, 128, 128);
-            }
-          }
-          ctx.strokeStyle = 'rgba(0,0,0,0.25)';
-          for (let i = 0; i <= 4; i++) {
-            ctx.beginPath();
-            ctx.moveTo(i * 128, 0);
-            ctx.lineTo(i * 128, h);
-            ctx.moveTo(0, i * 128);
-            ctx.lineTo(w, i * 128);
-            ctx.stroke();
-          }
-        }),
-        roughness: 0.97,
-      }),
+      worldUV(new THREE.PlaneGeometry(W, D)),
+      pbr('laminate_floor_02', { size: 2.4, color: 0xcfc6ba, roughness: 0.85 }),
     );
-    carpet.material.map.wrapS = carpet.material.map.wrapT = THREE.RepeatWrapping;
-    carpet.material.map.repeat.set(W / 2, D / 2);
     carpet.rotation.x = -Math.PI / 2;
     group.add(carpet);
 
     const wall = (w, h, x, y, z, rotY) => {
-      const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), mat.wall);
+      const m = new THREE.Mesh(worldUV(new THREE.PlaneGeometry(w, h)), mat.wall);
       m.position.set(x, y, z);
       m.rotation.y = rotY;
       group.add(m);
@@ -155,7 +141,7 @@ export function createOffice(scene, world) {
       }
     }
 
-    const ceiling = new THREE.Mesh(new THREE.PlaneGeometry(W, D), mat.ceiling);
+    const ceiling = new THREE.Mesh(worldUV(new THREE.PlaneGeometry(W, D)), mat.ceiling);
     ceiling.rotation.x = Math.PI / 2;
     ceiling.position.y = H;
     group.add(ceiling);
@@ -188,13 +174,25 @@ export function createOffice(scene, world) {
     sign.position.set(-5, 2.9, -D / 2 + 0.02);
     group.add(sign);
 
-    // Luz: día por las ventanas, plafones y un relleno suave
-    scene.add(new THREE.HemisphereLight(0xe4ecf7, 0x1a1c20, 0.45));
-    const daylight = new THREE.RectAreaLight(0xe6efff, 5.5, D * 0.8, winH);
+    // Luz: sol por los ventanales (con sombras), cielo difuso por las ventanas, plafones y el
+    // HDRI de oficina para el ambiente y los reflejos (lo pone stage.js)
+    scene.add(new THREE.HemisphereLight(0xe4ecf7, 0x1a1c20, 0.2));
+    const sun = new THREE.DirectionalLight(0xfff0d8, 3.2);
+    sun.position.set(-W / 2 - 7, 8.5, 2.5);
+    sun.target.position.set(-W / 2 + 5, 0, -1);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(shadowMapSize * 2, shadowMapSize * 2);
+    const reach = Math.max(W, D) / 2 + 3;
+    Object.assign(sun.shadow.camera, { left: -reach, right: reach, top: reach, bottom: -reach, near: 0.5, far: 40 });
+    sun.shadow.bias = -0.0003;
+    sun.shadow.normalBias = 0.03;
+    sun.shadow.radius = 3;
+    scene.add(sun, sun.target);
+    const daylight = new THREE.RectAreaLight(0xe6efff, 2.6, D * 0.8, winH);
     daylight.position.set(-W / 2 + 0.1, winY0 + winH / 2, -0.5);
     daylight.lookAt(0, 1, -0.5);
     scene.add(daylight);
-    const top = new THREE.RectAreaLight(0xfff6ea, 2.0, W * 0.7, D * 0.55);
+    const top = new THREE.RectAreaLight(0xfff6ea, 1.4, W * 0.7, D * 0.55);
     top.position.set(0, H - 0.05, 0);
     top.lookAt(0, 0, 0);
     scene.add(top);
@@ -502,6 +500,7 @@ export function createOffice(scene, world) {
   buildRoom(root, room);
   for (const f of world.furniture) buildFurniture(f);
   for (const e of world.evidence) buildEvidence(e);
+  enableShadows(root);
 
   return {
     evidence,

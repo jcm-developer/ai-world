@@ -23,9 +23,12 @@ export const stageOptions = {
   camera: { position: [0.5, 8.2, 10.8], target: [0, 0.9, -0.8] },
   fpsStart: { position: [0.6, 1.65, 4.3], lookAt: [0, 1.3, -3] },
   fogDensity: 0.018,
+  exposure: 1.0,
+  environment: { hdri: 'empty_warehouse_01', intensity: 0.35 },
+  ao: { radius: 0.5, intensity: 1 },
 };
 
-export function mount({ scene, renderer, agents, sfx }) {
+export function mount({ scene, renderer, stage, agents, sfx }) {
   let room = null;
   let props = null;
   let staticColliders = [];
@@ -50,8 +53,8 @@ export function mount({ scene, renderer, agents, sfx }) {
 
   return {
     init(world) {
-      if (!room) room = createRoom(scene, renderer, world.room);
-      if (!props) props = createProps(scene, world);
+      if (!room) room = createRoom(scene, renderer, world.room, stage.shadowMapSize);
+      if (!props) props = createProps(scene, world, stage.shadowMapSize);
       staticColliders = buildColliders(world);
       this.onWorldUpdate(world);
     },
