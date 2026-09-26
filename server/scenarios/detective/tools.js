@@ -114,7 +114,7 @@ const HANDLERS = {
     if (world.accused) return fail('Ya has hecho tu acusación.');
     const reasoning = str(args.reasoning);
     if (reasoning.length < 20) return fail('Explica tu acusación: quién, cómo y por qué, con pruebas.');
-    world.accused = { suspect: id, reasoning: reasoning.slice(0, 800), correct: id === CULPRIT, tick };
+    world.accused = { suspect: id, reasoning: reasoning.slice(0, 2000), correct: id === CULPRIT, tick };
     return { ok: true, summary: `Acusas a ${suspect.name}.`, result: reasoning, data: { suspect: id } };
   },
 

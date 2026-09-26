@@ -549,6 +549,9 @@ body {
 }
 
 .finished-summary {
+  max-height: min(46vh, 420px);
+  overflow-y: auto;
+  scrollbar-width: thin;
   margin: 12px 0 22px;
   font-size: 14px;
   line-height: 1.55;
