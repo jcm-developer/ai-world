@@ -119,7 +119,7 @@ Con GPU NVIDIA, descomenta el bloque `deploy` del servicio `ollama` en `docker-c
 
 ## Qué verás
 
-**El hub** (`/`): una tarjeta por escenario con su estado (disponible, en desarrollo, próximamente), si alguien lo está mirando y cuánto ha vivido o cómo acabó la última partida. Pulsa una tarjeta disponible para entrar.
+**El hub** (`/`): una tarjeta por cada mundo jugable, con si alguien lo está mirando y cuánto ha vivido o cómo acabó la última partida, y debajo, en «Lo que viene», los escenarios en desarrollo o por llegar. Pulsa una tarjeta para entrar. El hub, la pantalla de juego y la [landing](https://jcm-developer.github.io/ai-world/) comparten estilo: titulares en Instrument Serif, texto en Inter y etiquetas en JetBrains Mono (se cargan de Google Fonts; sin conexión se usan fuentes del sistema).
 
 **Dentro de un escenario** (Sala Meridiano):
 

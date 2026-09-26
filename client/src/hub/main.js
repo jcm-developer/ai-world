@@ -21,7 +21,11 @@ const ICONS = {
   podium: '<path d="M3 20h18M9 20V9h6v11M3 20v-6h6M15 20v-4h6v4"/>',
 };
 
+const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
+
 const grid = document.getElementById('grid');
+const upcoming = document.getElementById('upcoming');
+const upcomingSection = document.getElementById('upcoming-section');
 const modeChip = document.getElementById('mode-chip');
 
 async function load() {
@@ -36,42 +40,57 @@ async function load() {
   }
 }
 
+const icon = (s, size) =>
+  `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[s.icon] ?? ''}</svg>`;
+
+/** Los mundos jugables van en tarjetas grandes; el resto, en la rejilla de «Lo que viene». */
 function render(scenarios) {
-  grid.replaceChildren(...scenarios.map(card));
+  const playable = scenarios.filter((s) => s.status === 'disponible');
+  const later = scenarios.filter((s) => s.status !== 'disponible');
+  grid.replaceChildren(...playable.map(card));
+  upcoming.replaceChildren(...later.map(upcomingItem));
+  upcomingSection.hidden = later.length === 0;
 }
 
-function card(s) {
-  const playable = s.status === 'disponible';
-  const el = document.createElement(playable ? 'a' : 'article');
-  el.className = `card${playable ? ' playable' : ''}`;
+function card(s, index) {
+  const el = document.createElement('a');
+  el.className = 'card';
   el.style.setProperty('--card-accent', s.accent);
-  if (playable) el.href = `/play.html?s=${encodeURIComponent(s.id)}`;
+  el.href = `/play.html?s=${encodeURIComponent(s.id)}`;
 
   el.innerHTML = `
     <div class="card-top">
-      <span class="card-icon"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[s.icon] ?? ''}</svg></span>
-      <span class="badge badge-${s.status}"></span>
+      <span class="card-tag"><span class="card-n"></span><span class="card-tagline"></span></span>
+      <span class="card-icon">${icon(s, 22)}</span>
     </div>
     <h2 class="card-title"></h2>
-    <div class="card-meta"></div>
     <p class="card-desc"></p>
     <div class="card-foot">
       <span class="card-live"></span>
-      ${playable ? '<span class="card-cta">Entrar <span aria-hidden="true">→</span></span>' : ''}
+      <span class="card-cta">Entrar <span aria-hidden="true">→</span></span>
     </div>`;
 
-  el.querySelector('.badge').textContent = STATUS_LABEL[s.status] ?? s.status;
+  el.querySelector('.card-n').textContent = ROMAN[index] ?? String(index + 1);
+  el.querySelector('.card-tagline').textContent = `${s.tagline} · ${s.agents}`;
   el.querySelector('.card-title').textContent = s.title;
-  el.querySelector('.card-meta').textContent = `${s.tagline} · ${s.agents}`;
   el.querySelector('.card-desc').textContent = s.description;
   el.querySelector('.card-live').textContent = liveText(s);
   if (s.live?.viewers) el.querySelector('.card-live').classList.add('on');
   return el;
 }
 
+function upcomingItem(s) {
+  const li = document.createElement('li');
+  li.style.setProperty('--card-accent', s.accent);
+  li.innerHTML = `${icon(s, 22)}<strong></strong><span class="up-tag"></span><span class="up-desc"></span>`;
+  li.querySelector('strong').textContent = s.title;
+  li.querySelector('.up-tag').textContent = `${STATUS_LABEL[s.status] ?? s.status} · ${s.tagline}`;
+  li.querySelector('.up-desc').textContent = s.description;
+  return li;
+}
+
 /** Resumen del estado en vivo de un escenario jugable. */
 function liveText(s) {
-  if (s.status !== 'disponible') return '';
   const parts = [];
   if (s.live?.viewers) parts.push(`${s.live.viewers} mirando`);
   if (s.runs?.length) {
