@@ -2,7 +2,7 @@
 
 Un hub de experimentos con agentes de IA autónomos que viven en mundos 3D. No hay ventana de chat: el mundo entero es su interfaz. Cada agente percibe su entorno, razona, actúa y recuerda sin que nadie le dé instrucciones. Tú solo miras.
 
-**Página del proyecto:** https://jcm-developer.github.io/ai-world/ (su código está en `docs/`, publicado con GitHub Pages desde la rama `main`).
+**Página del proyecto:** https://jcm-developer.github.io/ai-world/ (en inglés; su código está en `docs/`, publicado con GitHub Pages desde la rama `main`).
 
 Al abrir la aplicación verás el **hub** con todos los escenarios. Hoy se pueden jugar:
 
