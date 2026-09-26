@@ -35,11 +35,10 @@ function splitWords(root) {
   return words;
 }
 
-// Titular: las palabras entran una a una y las dos últimas brillan
+// Titular: las palabras entran una a una
 const title = document.querySelector('.hero h1');
 const titleWords = splitWords(title);
 titleWords.forEach((w, i) => w.style.setProperty('--i', i));
-titleWords.at(-1)?.classList.add('hl');
 
 // Manifiesto: las palabras se encienden a medida que bajas
 const manifesto = document.querySelector('[data-words]');
@@ -65,10 +64,10 @@ async function typeInto(el, text, speed = 30) {
 }
 
 const HERO_THOUGHTS = [
-  'Antes de sacar conclusiones, quiero ver todas las piezas.',
-  'Una hipótesis solo vale si resiste lo que todavía no he visto.',
-  'Esto no encaja con lo que he apuntado antes. Vuelvo a mirarlo.',
-  'Hola. Sigo investigando; puedes quedarte a mirar.',
+  'Before drawing conclusions, I want to see every piece.',
+  'A hypothesis only counts if it survives what I haven’t seen yet.',
+  'This doesn’t match what I wrote down earlier. Let me look again.',
+  'Hello. I’m still investigating; feel free to stay and watch.',
 ];
 
 const heroThought = document.getElementById('hero-thought');
@@ -123,7 +122,7 @@ if (finePointer && !reduceMotion) {
       const r = media.getBoundingClientRect();
       const x = (e.clientX - r.left) / r.width;
       const y = (e.clientY - r.top) / r.height;
-      media.style.transform = `perspective(1400px) rotateY(${(x - 0.5) * 9}deg) rotateX(${(0.5 - y) * 7}deg) scale(1.015)`;
+      media.style.transform = `perspective(1400px) rotateY(${(x - 0.5) * 5}deg) rotateX(${(0.5 - y) * 4}deg)`;
       media.style.setProperty('--mx', `${x * 100}%`);
       media.style.setProperty('--my', `${y * 100}%`);
     });

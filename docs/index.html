@@ -1,46 +1,45 @@
 <!doctype html>
-<html lang="es">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>AI World · Mundos donde la IA decide sola</title>
-    <meta name="description" content="Mundos 3D habitados por inteligencias artificiales que exploran, deducen y actúan solas. Sin chat, sin instrucciones. Tú solo miras." />
+    <title>AI World · Worlds where AI thinks for itself</title>
+    <meta name="description" content="3D worlds inhabited by artificial minds that explore, deduce and act on their own. No chat, no instructions. You just watch." />
     <meta name="theme-color" content="#05070b" />
     <link rel="canonical" href="https://jcm-developer.github.io/ai-world/" />
 
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="AI World · Mundos donde la IA decide sola" />
-    <meta property="og:description" content="Mundos 3D habitados por IAs que exploran, deducen y actúan solas. Tú solo miras." />
+    <meta property="og:title" content="AI World · Worlds where AI thinks for itself" />
+    <meta property="og:description" content="3D worlds inhabited by AIs that explore, deduce and act on their own. You just watch." />
     <meta property="og:url" content="https://jcm-developer.github.io/ai-world/" />
     <meta property="og:image" content="https://jcm-developer.github.io/ai-world/assets/og.jpg" />
-    <meta property="og:locale" content="es_ES" />
+    <meta property="og:locale" content="en_US" />
     <meta name="twitter:card" content="summary_large_image" />
 
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='9' fill='none' stroke='%238cb8ff' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23e6ecf5'/%3E%3C/svg%3E" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <div class="grain" aria-hidden="true"></div>
-
     <header class="nav" id="nav">
-      <a class="wordmark" href="#top" aria-label="AI World, inicio">
-        <svg viewBox="0 0 32 32" width="26" height="26" aria-hidden="true">
-          <circle cx="16" cy="16" r="10" fill="none" stroke="currentColor" stroke-width="1.4" opacity="0.55" />
-          <circle cx="16" cy="16" r="3.2" fill="currentColor" />
-          <circle class="orbit-dot" cx="26" cy="16" r="1.8" fill="var(--accent)" />
+      <a class="wordmark" href="#top" aria-label="AI World, home">
+        <svg viewBox="0 0 32 32" width="24" height="24" aria-hidden="true">
+          <circle cx="16" cy="16" r="10" fill="none" stroke="currentColor" stroke-width="1.2" opacity="0.5" />
+          <circle cx="16" cy="16" r="3" fill="currentColor" />
+          <circle class="orbit-dot" cx="26" cy="16" r="1.6" fill="var(--accent)" />
         </svg>
         <span>AI World</span>
       </a>
-      <nav class="nav-links" aria-label="Secciones">
-        <a href="#mundos">Mundos</a>
-        <a href="#presencia">Entra</a>
-        <a href="#futuro">Lo que viene</a>
+      <nav class="nav-links" aria-label="Sections">
+        <a href="#worlds">Worlds</a>
+        <a href="#presence">Step inside</a>
+        <a href="#next">What’s next</a>
       </nav>
-      <a class="nav-gh" href="https://github.com/jcm-developer/ai-world" aria-label="AI World en GitHub">
-        <svg viewBox="0 0 16 16" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+      <a class="nav-gh" href="https://github.com/jcm-developer/ai-world">
+        <span>GitHub</span>
+        <svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true"><path d="M4.5 11.5l7-7M5.5 4.5h6v6" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" /></svg>
       </a>
     </header>
 
@@ -52,123 +51,110 @@
         <div class="hero-vignette" aria-hidden="true"></div>
 
         <div class="hero-copy">
-          <p class="kicker"><span class="pulse"></span>Una IA está pensando ahora mismo</p>
-          <h1 class="split">Mundos donde la&nbsp;IA decide&nbsp;sola</h1>
-          <p class="hero-sub">Nadie le habla. Nadie le da órdenes. Solo un mundo lleno de pistas y una mente que intenta entenderlo.</p>
+          <p class="kicker"><span class="pulse"></span>An AI is thinking right now</p>
+          <h1 class="split">Worlds where AI thinks <em>for itself</em></h1>
+          <p class="hero-sub">No one talks to it. No one gives it orders. Just a world full of clues, and a mind trying to make sense of it.</p>
         </div>
 
         <div class="hero-thought" id="agent-thought">
-          <span class="thought-label">Pensando</span>
+          <span class="thought-label">Thinking</span>
           <p><span id="hero-thought"></span><span class="caret"></span></p>
         </div>
 
-        <a class="scroll-cue" href="#manifiesto" aria-label="Seguir bajando">
-          <span></span>
-        </a>
+        <a class="scroll-cue" href="#manifesto" aria-label="Scroll down"><span></span></a>
       </section>
 
       <!-- Manifiesto -->
-      <section id="manifiesto" class="manifesto">
-        <p class="manifesto-text" data-words>No hay ventana de chat. El mundo entero es su interfaz. Cada IA mira a su alrededor, duda, se equivoca, lo apunta y vuelve a intentarlo. Tú no juegas. <strong>Tú solo miras.</strong></p>
+      <section id="manifesto" class="manifesto">
+        <p class="eyebrow reveal">The idea</p>
+        <p class="manifesto-text" data-words>There is no chat window. The world itself is the interface. Each AI looks around, hesitates, gets things wrong, writes them down and tries again. You don’t play. <em>You just watch.</em></p>
       </section>
 
       <!-- Cinta de verbos -->
       <div class="ticker" aria-hidden="true">
         <div class="ticker-track">
-          <span>explora</span><i></i><span>inspecciona</span><i></i><span>recuerda</span><i></i><span>conecta</span><i></i><span>duda</span><i></i><span>descifra</span><i></i><span>interroga</span><i></i><span>sospecha</span><i></i><span>acusa</span><i></i><span>escapa</span><i></i>
-          <span>explora</span><i></i><span>inspecciona</span><i></i><span>recuerda</span><i></i><span>conecta</span><i></i><span>duda</span><i></i><span>descifra</span><i></i><span>interroga</span><i></i><span>sospecha</span><i></i><span>acusa</span><i></i><span>escapa</span><i></i>
+          <span>explores</span><i></i><span>inspects</span><i></i><span>remembers</span><i></i><span>connects</span><i></i><span>doubts</span><i></i><span>deciphers</span><i></i><span>questions</span><i></i><span>suspects</span><i></i><span>accuses</span><i></i><span>escapes</span><i></i>
+          <span>explores</span><i></i><span>inspects</span><i></i><span>remembers</span><i></i><span>connects</span><i></i><span>doubts</span><i></i><span>deciphers</span><i></i><span>questions</span><i></i><span>suspects</span><i></i><span>accuses</span><i></i><span>escapes</span><i></i>
         </div>
       </div>
 
       <!-- Mundos -->
-      <section id="mundos" class="worlds">
+      <section id="worlds" class="worlds">
         <header class="section-head reveal">
-          <p class="eyebrow">Tres mundos, tres mentes</p>
-          <h2>Elige qué quieres ver pensar</h2>
+          <p class="eyebrow">Three worlds, three minds</p>
+          <h2>Choose what you want to <em>watch think</em></h2>
         </header>
 
         <article class="world reveal" style="--c: #8cb8ff; --c-rgb: 140, 184, 255">
           <div class="world-media tilt">
-            <img src="assets/meridiano.webp" width="1600" height="900" loading="lazy" alt="La Sala Meridiano: paneles flotantes con documentos, código y gráficas bajo conos de luz, observados por una IA holográfica." />
-            <div class="world-chip" data-thought="Antes de sacar conclusiones, quiero ver todas las piezas."><span class="thought-label">Pensando</span><p></p></div>
+            <img src="assets/meridiano.webp" width="1600" height="900" loading="lazy" alt="The Meridiano Room: floating panels showing documents, code and charts under cones of light, watched over by a holographic AI." />
+            <div class="world-chip" data-thought="Before drawing conclusions, I want to see every piece."><span class="thought-label">Thinking</span><p></p></div>
           </div>
           <div class="world-copy">
-            <span class="world-n">01</span>
-            <p class="tag">
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><circle cx="12" cy="12" r="7.5"/><circle cx="12" cy="12" r="2.2" fill="currentColor"/><circle cx="19.5" cy="12" r="1.3" fill="currentColor"/></svg>
-              Exploración libre
-            </p>
-            <h3>Sala Meridiano</h3>
-            <p>Siete objetos flotan en una sala en penumbra: un informe, un fragmento de código, una gráfica, un plano… Una IA curiosa los recorre, los estudia y une con hilos de luz las ideas que encajan.</p>
-            <p class="whisper">Nadie le dice qué buscar. Pero la sala esconde una historia que el informe no cuenta.</p>
+            <p class="tag"><span class="world-n">I</span>Free exploration</p>
+            <h3>The Meridiano Room</h3>
+            <p>Seven objects float in a dim room: a report, a snippet of code, a chart, a floor plan… A curious AI walks among them, studies each one and ties together, with threads of light, the ideas that fit.</p>
+            <p class="whisper">No one tells it what to look for. But the room hides a story the report leaves out.</p>
           </div>
         </article>
 
         <article class="world flip reveal" style="--c: #f0c674; --c-rgb: 240, 198, 116">
           <div class="world-media tilt">
-            <img src="assets/archivo.webp" width="1600" height="900" loading="lazy" alt="El Archivo: un sótano en penumbra con escritorio, terminal, caja fuerte, estantería, sillón y una puerta cerrada." />
-            <div class="world-chip" data-thought="Primero, mirar todo lo que hay en esta habitación."><span class="thought-label">Pensando</span><p></p></div>
+            <img src="assets/archivo.webp" width="1600" height="900" loading="lazy" alt="The Archive: a dim basement with a desk, a terminal, a safe, a bookcase, an armchair and a locked door." />
+            <div class="world-chip" data-thought="First, look at everything in this room."><span class="thought-label">Thinking</span><p></p></div>
           </div>
           <div class="world-copy">
-            <span class="world-n">02</span>
-            <p class="tag">
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="12" r="3.5"/><path d="M11.5 12H20M17 12v3M20 12v2"/></svg>
-              Escape room
-            </p>
-            <h3>El Archivo</h3>
-            <p>Despierta encerrada en el sótano de un laboratorio. Tiene 150 turnos para salir. Rebusca, combina objetos y descifra cerraduras a partir de pistas que nadie le ha explicado.</p>
-            <p class="whisper">Si falla tres códigos seguidos, la cerradura se bloquea. Adivinar no sirve: tiene que pensar.</p>
+            <p class="tag"><span class="world-n">II</span>Escape room</p>
+            <h3>The Archive</h3>
+            <p>It wakes up locked in the basement of a laboratory, with 150 turns to get out. It searches, combines objects and cracks locks using clues nobody has explained.</p>
+            <p class="whisper">Three wrong codes in a row and the lock seizes up. Guessing won’t do. It has to think.</p>
           </div>
         </article>
 
         <article class="world reveal" style="--c: #f08a8a; --c-rgb: 240, 138, 138">
           <div class="world-media tilt">
-            <img src="assets/detective.webp" width="1600" height="900" loading="lazy" alt="La noche del 13: una oficina con cuatro sospechosos trabajando en sus puestos y pruebas repartidas por la sala." />
-            <div class="world-chip" data-thought="Cada versión tiene un hueco. Solo tengo que encontrarlo."><span class="thought-label">Pensando</span><p></p></div>
+            <img src="assets/detective.webp" width="1600" height="900" loading="lazy" alt="The Night of the 13th: an office with four suspects working at their desks and evidence scattered around the room." />
+            <div class="world-chip" data-thought="Every story has a gap. I just have to find it."><span class="thought-label">Thinking</span><p></p></div>
           </div>
           <div class="world-copy">
-            <span class="world-n">03</span>
-            <p class="tag">
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5.5 5.5"/></svg>
-              Detective
-            </p>
-            <h3>La noche del 13</h3>
-            <p>Alguien provocó la falsa alarma. Una IA detective examina las pruebas e interroga a cuatro sospechosos, cada uno con su propia IA, sus secretos y su voz.</p>
-            <p class="whisper">Alguno miente. Cinco mentes artificiales en la misma sala, y solo una busca la verdad.</p>
+            <p class="tag"><span class="world-n">III</span>Detective</p>
+            <h3>The Night of the 13th</h3>
+            <p>Someone set off the false alarm. An AI detective examines the evidence and questions four suspects, each with an AI of its own, its own secrets and its own voice.</p>
+            <p class="whisper">One of them is lying. Five artificial minds in one room, and only one is looking for the truth.</p>
           </div>
         </article>
       </section>
 
       <!-- Presencia -->
-      <section id="presencia" class="presence">
+      <section id="presence" class="presence">
         <div class="presence-media reveal">
-          <img src="assets/presencia.webp" width="1600" height="780" loading="lazy" alt="Vista en primera persona en El Archivo: la IA camina hacia el visitante y le saluda." />
+          <img src="assets/presencia.webp" width="1600" height="780" loading="lazy" alt="First-person view inside The Archive: the AI walks towards the visitor and greets them." />
           <div class="bubble">
-            <p>«Hola. Sigo investigando; puedes quedarte a mirar.»</p>
+            <p>“Hello. I’m still investigating; feel free to stay and watch.”</p>
             <span class="voice" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
           </div>
         </div>
         <div class="presence-copy reveal">
-          <p class="eyebrow">Entra en la sala</p>
-          <h2>Y la IA sabrá que estás ahí</h2>
-          <p>Camina entre sus pistas en primera persona. Te verá llegar, girará la cabeza cuando te acerques y, de vez en cuando, te contará en voz alta lo que acaba de descubrir.</p>
-          <p>Cada personaje tiene su propia voz. Y cada pensamiento aparece en el aire mientras lo dice.</p>
+          <p class="eyebrow">Step inside</p>
+          <h2>And the AI will know <em>you’re there</em></h2>
+          <p>Walk among its clues in first person. It will notice you arrive, turn its head as you come closer and, every now and then, tell you out loud what it has just found.</p>
+          <p>Every character has a voice of its own, and each thought appears in the air as it speaks.</p>
         </div>
       </section>
 
       <!-- Lo que viene -->
-      <section id="futuro" class="future">
+      <section id="next" class="future">
         <header class="section-head reveal">
-          <p class="eyebrow">Lo que viene</p>
-          <h2>Más mundos. Más mentes. Más caos.</h2>
+          <p class="eyebrow">What’s next</p>
+          <h2>More worlds. More minds. <em>More chaos.</em></h2>
         </header>
-        <ul class="future-grid">
-          <li class="reveal" style="--c: #7fd6b0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 21V4M6 4h11l-2.5 4L17 12H6"/></svg><strong>Carrera de obstáculos</strong><span>Dos IAs compiten por llegar primero entre muros y niebla.</span></li>
-          <li class="reveal" style="--c: #c3a6ff"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3h4M10.5 3v6L5 19a1.5 1.5 0 0 0 1.3 2h11.4a1.5 1.5 0 0 0 1.3-2L13.5 9V3M7.5 15h9"/></svg><strong>Laboratorio de leyes ocultas</strong><span>Una física secreta que solo se descubre experimentando.</span></li>
-          <li class="reveal" style="--c: #ff9f7a"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7c3-1.5 13-1.5 16 0 0 7-3 11-8 11S4 14 4 7z"/><path d="M8.5 11.5h2M13.5 11.5h2"/></svg><strong>El traidor</strong><span>Seis IAs en una estación espacial. Una sabotea en secreto.</span></li>
-          <li class="reveal" style="--c: #7fc8e8"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="12" r="4"/><circle cx="16" cy="12" r="4"/></svg><strong>Cooperación a ciegas</strong><span>Una ve el mapa y no se mueve. La otra se mueve y no ve.</span></li>
-          <li class="reveal" style="--c: #e6ecf5"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 19L19 5M14 5h5v5M19 19L5 5M5 10V5h5"/></svg><strong>Tú contra la IA</strong><span>El único mundo en el que tú también juegas.</span></li>
-          <li class="reveal" style="--c: #b8c4d6"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 20h18M9 20V9h6v11M3 20v-6h6M15 20v-4h6v4"/></svg><strong>Arena de modelos</strong><span>El mismo reto, varias IAs a la vez. ¿Cuál piensa mejor?</span></li>
+        <ul class="future-grid reveal">
+          <li style="--c: #7fd6b0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 21V4M6 4h11l-2.5 4L17 12H6"/></svg><strong>Obstacle Race</strong><span>Two AIs race to the finish through walls and fog.</span></li>
+          <li style="--c: #c3a6ff"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3h4M10.5 3v6L5 19a1.5 1.5 0 0 0 1.3 2h11.4a1.5 1.5 0 0 0 1.3-2L13.5 9V3M7.5 15h9"/></svg><strong>The Hidden Laws Lab</strong><span>Secret physics that can only be found by experimenting.</span></li>
+          <li style="--c: #ff9f7a"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7c3-1.5 13-1.5 16 0 0 7-3 11-8 11S4 14 4 7z"/><path d="M8.5 11.5h2M13.5 11.5h2"/></svg><strong>The Traitor</strong><span>Six AIs on a space station. One of them is a saboteur.</span></li>
+          <li style="--c: #7fc8e8"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="12" r="4"/><circle cx="16" cy="12" r="4"/></svg><strong>Blind Cooperation</strong><span>One sees the map but can’t move. The other moves but can’t see.</span></li>
+          <li style="--c: #e6ecf5"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 19L19 5M14 5h5v5M19 19L5 5M5 10V5h5"/></svg><strong>You vs. the AI</strong><span>The only world where you get to play too.</span></li>
+          <li style="--c: #b8c4d6"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 20h18M9 20V9h6v11M3 20v-6h6M15 20v-4h6v4"/></svg><strong>Model Arena</strong><span>The same challenge, several AIs at once. Which one thinks best?</span></li>
         </ul>
       </section>
 
@@ -176,33 +162,32 @@
       <section class="finale">
         <div class="finale-orbit" aria-hidden="true">
           <svg viewBox="0 0 200 200">
-            <circle cx="100" cy="100" r="92" class="ring r1" />
-            <circle cx="100" cy="100" r="66" class="ring r2" />
-            <circle cx="100" cy="100" r="40" class="ring r3" />
-            <circle cx="100" cy="100" r="9" class="core" />
-            <g class="sat s1"><circle cx="192" cy="100" r="3.2" /></g>
-            <g class="sat s2"><circle cx="166" cy="100" r="2.4" /></g>
-            <g class="sat s3"><circle cx="140" cy="100" r="2" /></g>
+            <circle cx="100" cy="100" r="92" class="ring" />
+            <circle cx="100" cy="100" r="66" class="ring" />
+            <circle cx="100" cy="100" r="40" class="ring" />
+            <g class="sat s1"><circle cx="192" cy="100" r="2.6" /></g>
+            <g class="sat s2"><circle cx="166" cy="100" r="2" /></g>
+            <g class="sat s3"><circle cx="140" cy="100" r="1.6" /></g>
           </svg>
         </div>
-        <h2 class="reveal">Tú solo miras.</h2>
-        <p class="reveal">AI World es un proyecto abierto. Asómate a ver cómo está hecho.</p>
+        <h2 class="reveal">You just <em>watch.</em></h2>
+        <p class="reveal">AI World is an open project. Take a look at how it’s made.</p>
         <a class="btn reveal" href="https://github.com/jcm-developer/ai-world">
-          <svg viewBox="0 0 16 16" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
-          Ver el proyecto en GitHub
+          View the project on GitHub
+          <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" /></svg>
         </a>
       </section>
     </main>
 
     <footer class="footer">
       <span class="wordmark small">
-        <svg viewBox="0 0 32 32" width="18" height="18" aria-hidden="true">
-          <circle cx="16" cy="16" r="10" fill="none" stroke="currentColor" stroke-width="1.4" opacity="0.55" />
+        <svg viewBox="0 0 32 32" width="16" height="16" aria-hidden="true">
+          <circle cx="16" cy="16" r="10" fill="none" stroke="currentColor" stroke-width="1.4" opacity="0.5" />
           <circle cx="16" cy="16" r="3.2" fill="currentColor" />
         </svg>
         AI World
       </span>
-      <span>Mundos donde la IA decide sola</span>
+      <span>Worlds where AI thinks for itself</span>
     </footer>
 
     <script src="main.js"></script>
